@@ -1,3 +1,5 @@
+# This test checks that using a subdirectory of build tree for
+# deployment tree works.
 prepare: >
   git init foosrc &&
   cd foosrc &&
