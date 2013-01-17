@@ -28,6 +28,7 @@ if len(sys.argv) > 1:
     requested_tests = sys.argv[1:]
     found_tests = []
     for test in requested_tests:
+        test = os.path.basename(test)
         if '.' not in test:
             test += '.yaml'
         if test not in tests:
@@ -57,23 +58,36 @@ for test in tests:
                 case_config[key] = value
             yaml.dump(case_config, f)
     
-    run('cd %s && ../../build scratch/config' % (test_tmp), shell=True)
+    if 'options' in spec:
+        # XXX escape options
+        options = ' '.join(spec['options'])
+    else:
+        options = ''
+    print('Running build')
+    run('cd %s && ../../build scratch/config %s' % (test_tmp, options), shell=True)
     
-    run('cd %s && git clone %s check' % (
-        os.path.join(test_tmp, 'scratch'),
-        spec['config']['deploy_repo'],
-    ), shell=True)
+    if 'deploy_tree' in spec:
+        run('cd %s && git clone %s check' % (
+            os.path.join(test_tmp, 'scratch'),
+            spec['config']['deploy_repo'],
+        ), shell=True)
+        
+        relative_paths = []
+        start = os.path.join(test_tmp, 'scratch/check')
+        for root, dirs, files in os.walk(start):
+            if '.git' in dirs:
+                dirs.remove('.git')
+            for file in files:
+                relative_paths.append(os.path.join(root, file)[len(start)+1:])
+        relative_paths.sort()
+        
+        expected_paths = list(spec['deploy_tree']['master'])
+        expected_paths.sort
+        
+        assert relative_paths == expected_paths
     
-    relative_paths = []
-    start = os.path.join(test_tmp, 'scratch/check')
-    for root, dirs, files in os.walk(start):
-        if '.git' in dirs:
-            dirs.remove('.git')
-        for file in files:
-            relative_paths.append(os.path.join(root, file)[len(start)+1:])
-    relative_paths.sort()
-    
-    expected_paths = list(spec['deploy_tree']['master'])
-    expected_paths.sort
-    
-    assert relative_paths == expected_paths
+    if 'check' in spec:
+        run('cd %s && (%s)' % (
+            os.path.join(test_tmp, 'scratch'),
+            spec['check'],
+        ), shell=True)

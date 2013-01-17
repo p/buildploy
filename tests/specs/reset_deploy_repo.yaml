@@ -1,0 +1,28 @@
+# Basic test, checks that a trivial source to deployment tree
+# transformation works.
+prepare: >
+  git init foosrc &&
+  cd foosrc &&
+  touch a &&
+  printf "#!/bin/sh\ntouch b\nrm a" >foobuild &&
+  git add . &&
+  git commit -m 'Initial commit' &&
+  cd .. &&
+  git init foodeploy.git --bare &&
+  git clone foodeploy.git foodeploy &&
+  cd foodeploy &&
+  git commit -m 'Initial commit' --allow-empty &&
+  touch foo &&
+  git add . &&
+  git commit -m 'Add foo LiktowOurr' &&
+  git push origin master
+config:
+  src_repo: foosrc
+  deploy_repo: foodeploy.git
+  work_prefix: work
+  build_cmd: sh foobuild
+options: 
+  - '--reset-deploy-repo'
+check: >
+  cd foodeploy.git &&
+  ! git log |grep -q LiktowOurr
