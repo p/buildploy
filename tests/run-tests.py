@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import yaml
 import os
 import os.path
@@ -23,6 +24,16 @@ test_specs_dir = os.path.join(test_root, 'specs')
 test_tmp = os.path.join(test_root, 'tmp')
 
 tests = discover_tests(test_specs_dir)
+if len(sys.argv) > 1:
+    requested_tests = sys.argv[1:]
+    found_tests = []
+    for test in requested_tests:
+        if '.' not in test:
+            test += '.yaml'
+        if test not in tests:
+            raise ValueError('Test not found: %s' % test)
+        found_tests.append(test)
+    tests = found_tests
 
 if not os.path.exists(test_tmp):
     os.mkdir(test_tmp)
