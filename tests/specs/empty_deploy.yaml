@@ -1,0 +1,21 @@
+# This test checks that it is possible to perform the build
+# when deployment repository is empty (has no commits).
+prepare: >
+  git init foosrc &&
+  cd foosrc &&
+  touch a &&
+  printf "#!/bin/sh\ntouch b\nrm a" >foobuild &&
+  git add . &&
+  git commit -m 'Initial commit' &&
+  cd .. &&
+  git init foodeploy.git --bare &&
+  git clone foodeploy.git foodeploy
+config:
+  src_repo: foosrc
+  deploy_repo: foodeploy.git
+  work_prefix: work
+  build_cmd: sh foobuild
+deploy_tree:
+  master:
+    - b
+    - foobuild

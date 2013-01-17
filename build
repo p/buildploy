@@ -71,6 +71,7 @@ for branch in branches:
         run(['rm', '-f', os.path.join(deploy_dir, 'git/index')])
         run('cd %s && rm -rf `git ls-files -o`' % deploy_dir, shell=True)
         git_in_dir(deploy_dir, ['commit', '--allow-empty', '-m', 'New tree'])
+    run('cd %s && if git status |grep -q "# Initial commit"; then git commit --allow-empty -m "Initial commit"; fi' % deploy_dir, shell=True)
     git_in_dir(deploy_dir, ['checkout', branch])
     if options.reset_deploy_repo:
         git_in_dir(deploy_dir, ['reset', '--hard', 'newbranch'])
