@@ -5,8 +5,6 @@ import os
 import os.path
 import subprocess
 
-tests = ['specs/basic.yaml', 'specs/deploy_subdir.yaml']
-
 def run(cmd, **kwargs):
     print repr(cmd), repr(kwargs)
     subprocess.check_call(cmd, **kwargs)
@@ -14,13 +12,20 @@ def run(cmd, **kwargs):
 
 test_root = os.path.dirname(__file__)
 test_root = os.path.realpath(test_root)
+test_specs_dir = os.path.join(test_root, 'specs')
 test_tmp = os.path.join(test_root, 'tmp')
+
+tests = []
+for entry in os.listdir(test_specs_dir):
+    if entry[0] == '.':
+        continue
+    tests.append(entry)
 
 if not os.path.exists(test_tmp):
     os.mkdir(test_tmp)
 
 for test in tests:
-    path = os.path.join(test_root, test)
+    path = os.path.join(test_specs_dir, test)
     with open(path) as f:
         spec = yaml.load(f)
     
