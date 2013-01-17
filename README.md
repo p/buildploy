@@ -86,8 +86,8 @@ and how the project should be built.
 Configuration files are in YAML format and look like this:
 
 	src_repo: git@github.com:foo/foo.git
-	deploy_repo: git@github.com:foo/foo.git
-	work_prefix: /home/build/foo-deploy
+	deploy_repo: git@github.com:foo/foo-deploy.git
+	work_prefix: /home/build/foo-build
 	build_cmd: make
 
 The required items are:
