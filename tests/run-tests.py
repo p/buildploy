@@ -64,7 +64,8 @@ for test in tests:
     else:
         options = ''
     print('Running build')
-    run('cd %s && ../../build scratch/config %s' % (test_tmp, options), shell=True)
+    build_script = os.path.join(test_root, '../build')
+    run('cd %s && %s scratch/config %s' % (test_tmp, build_script, options), shell=True)
     
     if 'deploy_tree' in spec:
         run('cd %s && git clone %s check' % (
