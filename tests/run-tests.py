@@ -9,17 +9,20 @@ def run(cmd, **kwargs):
     print repr(cmd), repr(kwargs)
     subprocess.check_call(cmd, **kwargs)
 
+def discover_tests(test_specs_dir):
+    tests = []
+    for entry in os.listdir(test_specs_dir):
+        if entry[0] == '.':
+            continue
+        tests.append(entry)
+    return tests
 
 test_root = os.path.dirname(__file__)
 test_root = os.path.realpath(test_root)
 test_specs_dir = os.path.join(test_root, 'specs')
 test_tmp = os.path.join(test_root, 'tmp')
 
-tests = []
-for entry in os.listdir(test_specs_dir):
-    if entry[0] == '.':
-        continue
-    tests.append(entry)
+tests = discover_tests(test_specs_dir)
 
 if not os.path.exists(test_tmp):
     os.mkdir(test_tmp)
