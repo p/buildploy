@@ -5,7 +5,7 @@ import os
 import os.path
 import subprocess
 
-tests = ['specs/basic.yaml']
+tests = ['specs/basic.yaml', 'specs/deploy_subdir.yaml']
 
 def run(cmd, **kwargs):
     print repr(cmd), repr(kwargs)

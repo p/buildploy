@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 
+import optparse
 import subprocess
 import os.path
 import sys
 import yaml
 import time
-
-config_file = sys.argv[1]
-with open(config_file) as f:
-    config = yaml.load(f)
 
 def run(cmd, **kwargs):
     print repr(cmd), repr(kwargs)
@@ -31,12 +28,23 @@ def copy(build_dir, branch):
 def build(build_dir, branch):
     run('cd %s && %s . %s' % (build_dir, config['build_cmd'], branch), shell=True)
 
+parser = optparse.OptionParser()
+parser.add_option('-p', '--push', action='store_true', dest='push')
+parser.add_option('-P', '--no-push', action='store_false', dest='push')
+options, args = parser.parse_args()
+
+config_file = sys.argv[1]
+with open(config_file) as f:
+    config = yaml.load(f)
+
+branches = config.get('branches', ['master'])
+
 local_src = os.path.join(config['work_prefix'], 'src')
 if not os.path.exists(local_src):
     run(['git', 'init', local_src])
     git_in_dir(local_src, ['remote', 'add', 'src', config['src_repo'], '-f'])
 else:
-    fetch_branches = ['src/' + branch for branch in config['branches']]
+    fetch_branches = ['src/' + branch for branch in branches]
     git_in_dir(local_src, ['fetch', 'src'])
 
 build_dir = os.path.join(config['work_prefix'], 'build')
@@ -47,18 +55,27 @@ deploy_dir = os.path.join(config['work_prefix'], 'deploy')
 if not os.path.exists(deploy_dir):
     run(['git', 'init', deploy_dir])
     git_in_dir(deploy_dir, ['remote', 'add', 'deploy', config['deploy_repo'], '-f'])
-for branch in config['branches']:
-    run('cd %s && git checkout %s || git branch %s master' % (deploy_dir, branch, branch), shell=True)
+for branch in branches:
+    if branch != 'master':
+        run('cd %s && git checkout %s || git branch %s master' % (deploy_dir, branch, branch), shell=True)
 
-for branch in config['branches']:
+for branch in branches:
     git_in_dir(local_src, ['checkout', branch])
     #checkout(build_dir, branch)
     copy(build_dir, branch)
     build(build_dir, branch)
     git_in_dir(deploy_dir, ['checkout', branch])
-    run(['rsync', '-a', '--exclude', '.git', build_dir + '/', deploy_dir, '--delete'])
+    if 'deploy_subdir' in config:
+        deploy_src = os.path.join(build_dir, config['deploy_subdir'])
+    else:
+        deploy_src = build_dir
+    run(['rsync', '-a', '--exclude', '.git', deploy_src + '/', deploy_dir, '--delete'])
     git_in_dir(deploy_dir, ['add', '-u'])
     git_in_dir(deploy_dir, ['add', '.'])
-    git_in_dir(deploy_dir, ['commit', '-m', 'Built at %s' % time.time()])
+    git_in_dir(deploy_dir, ['commit', '--allow-empty', '-m', 'Built at %s' % time.time()])
 
-git_in_dir(deploy_dir, ['push', 'deploy'] + config['branches'])
+push = config.get('push', True)
+if options.push is not None:
+    push = options.push
+if push:
+    git_in_dir(deploy_dir, ['push', 'deploy'] + branches)
