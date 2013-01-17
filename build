@@ -1,0 +1,64 @@
+#!/usr/bin/env python
+
+import subprocess
+import os.path
+import sys
+import yaml
+import time
+
+config_file = sys.argv[1]
+with open(config_file) as f:
+    config = yaml.load(f)
+
+def run(cmd, **kwargs):
+    print repr(cmd), repr(kwargs)
+    subprocess.check_call(cmd, **kwargs)
+
+def git_in_dir(dir, args):
+    cmd = ['git',
+        '--git-dir', os.path.join(dir, '.git'),
+        '--work-tree', dir]
+    cmd.extend(args)
+    run(cmd)
+
+def checkout(build_dir, branch):
+    git_in_dir(local_src, ['checkout', branch])
+    run(['rsync', '-a', local_src + '/', build_dir, '--delete'])
+
+def copy(build_dir, branch):
+    run(['rsync', '-a', '--exclude', '.git', config['src_repo'] + '/', build_dir, '--delete'])
+
+def build(build_dir, branch):
+    run('cd %s && %s . %s' % (build_dir, config['build_cmd'], branch), shell=True)
+
+local_src = os.path.join(config['work_prefix'], 'src')
+if not os.path.exists(local_src):
+    run(['git', 'init', local_src])
+    git_in_dir(local_src, ['remote', 'add', 'src', config['src_repo'], '-f'])
+else:
+    fetch_branches = ['src/' + branch for branch in config['branches']]
+    git_in_dir(local_src, ['fetch', 'src'])
+
+build_dir = os.path.join(config['work_prefix'], 'build')
+if not os.path.exists(build_dir):
+    os.mkdir(build_dir)
+
+deploy_dir = os.path.join(config['work_prefix'], 'deploy')
+if not os.path.exists(deploy_dir):
+    run(['git', 'init', deploy_dir])
+    git_in_dir(deploy_dir, ['remote', 'add', 'deploy', config['deploy_repo'], '-f'])
+for branch in config['branches']:
+    run('cd %s && git checkout %s || git branch %s master' % (deploy_dir, branch, branch), shell=True)
+
+for branch in config['branches']:
+    git_in_dir(local_src, ['checkout', branch])
+    #checkout(build_dir, branch)
+    copy(build_dir, branch)
+    build(build_dir, branch)
+    git_in_dir(deploy_dir, ['checkout', branch])
+    run(['rsync', '-a', '--exclude', '.git', build_dir + '/', deploy_dir, '--delete'])
+    git_in_dir(deploy_dir, ['add', '-u'])
+    git_in_dir(deploy_dir, ['add', '.'])
+    git_in_dir(deploy_dir, ['commit', '-m', 'Built at %s' % time.time()])
+
+git_in_dir(deploy_dir, ['push', 'deploy'] + config['branches'])
