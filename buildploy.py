@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import re
 import optparse
 import subprocess
 import os.path
@@ -7,16 +8,42 @@ import sys
 import yaml
 import time
 
+py3 = sys.version_info[0] == 3
+
+def output_to_string(output):
+    '''Converts output of a process invoked via subprocess module,
+    which is of type bytes on python 3, to a string.
+    '''
+    
+    if py3:
+        return output.decode('utf8')
+    else:
+        return output
+
 def run(cmd, **kwargs):
     print(repr(cmd), repr(kwargs))
+    if 'return_stdout' in kwargs:
+        return_stdout = kwargs.pop('return_stdout')
+        if return_stdout:
+            try:
+                from cStringIO import StringIO
+            except ImportError:
+                from io import StringIO
+            io = StringIO()
+            kwargs['stdout'] = subprocess.PIPE
+            p = subprocess.Popen(cmd, **kwargs)
+            stdout, stderr = p.communicate()
+            if p.returncode != 0:
+                raise subprocess.CalledProcessError('Command failed with code %d' % p.returncocde)
+            return stdout
     subprocess.check_call(cmd, **kwargs)
 
-def git_in_dir(dir, args):
+def git_in_dir(dir, args, **kwargs):
     cmd = ['git',
         '--git-dir', os.path.join(dir, '.git'),
         '--work-tree', dir]
     cmd.extend(args)
-    run(cmd)
+    return run(cmd, **kwargs)
 
 def checkout(build_dir, branch):
     git_in_dir(local_src, ['checkout', branch])
@@ -27,6 +54,17 @@ def copy(build_dir, branch, config):
 
 def build(build_dir, branch, config):
     run('cd %s && (%s)' % (build_dir, config['build_cmd']), shell=True)
+
+def git_list_remote_branches(dir):
+    branches = []
+    output = git_in_dir(dir, ['branch', '-r'], return_stdout=True)
+    output = output_to_string(output)
+    for line in output.split("\n"):
+        line = line.strip()
+        match = re.match(r'(\S+)', line)
+        if match:
+            branches.append(match.group(1))
+    return branches
 
 def main():
     parser = optparse.OptionParser()
