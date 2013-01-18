@@ -40,6 +40,8 @@ if not os.path.exists(test_tmp):
     os.mkdir(test_tmp)
 
 for test in tests:
+    print('Running %s' % test)
+    
     path = os.path.join(test_specs_dir, test)
     with open(path) as f:
         spec = yaml.load(f)
@@ -62,7 +64,7 @@ for test in tests:
         options = ' '.join(spec['options'])
     else:
         options = ''
-    print('Running build')
+    print('Building')
     build_script = os.path.join(test_root, '../build')
     run('cd %s && %s scratch/config %s' % (test_tmp, build_script, options), shell=True)
     

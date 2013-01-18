@@ -59,6 +59,8 @@ if not os.path.exists(deploy_dir):
 for branch in branches:
     if branch != 'master':
         run('cd %s && git checkout %s || git branch %s master' % (deploy_dir, branch, branch), shell=True)
+    else:
+        run('cd %s && git checkout %s && git reset --hard deploy/%s' % (deploy_dir, branch, branch), shell=True)
 
 for branch in branches:
     git_in_dir(local_src, ['checkout', branch])
