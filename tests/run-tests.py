@@ -38,6 +38,8 @@ if len(sys.argv) > 1:
 if not os.path.exists(test_tmp):
     os.mkdir(test_tmp)
 
+run('nosetests')
+
 for test in tests:
     print('Running %s' % test)
     
