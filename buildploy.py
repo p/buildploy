@@ -106,11 +106,34 @@ def main():
     if not os.path.exists(deploy_dir):
         run(['git', 'init', deploy_dir])
         git_in_dir(deploy_dir, ['remote', 'add', 'deploy', config['deploy_repo'], '-f'])
+    local_branches = git_list_local_branches(deploy_dir)
+    remote_branches = git_list_remote_branches(deploy_dir)
     for branch in branches:
-        if branch != 'master':
-            run('cd %s && git checkout %s || git branch %s master' % (deploy_dir, branch, branch), shell=True)
-        elif branch in git_list_remote_branches(deploy_dir):
-            run('cd %s && git checkout %s && git reset --hard deploy/%s' % (deploy_dir, branch, branch), shell=True)
+        # XXX test all paths
+        if branch in local_branches:
+            run('cd %s && git checkout %s' % (deploy_dir, branch), shell=True)
+            if branch in remote_branches:
+                run('cd %s && git reset --hard deploy/%s' % (deploy_dir, branch), shell=True)
+            # else: branch is not in remote, will be created on push
+        else:
+            print(branch, local_branches)
+            if branch in remote_branches:
+                run('cd %s && git checkout -b %s --track deploy/%s' % (deploy_dir, branch, branch), shell=True)
+            else:
+                # no local and no remote branch
+                if branch != 'master' and 'master' in local_branches:
+                    # initialize to master
+                    # XXX should we initialize to a new tree instead?
+                    git_in_dir(deploy_dir, ['checkout', 'master'])
+                    git_in_dir(deploy_dir, ['checkout', '-b', branch])
+                else:
+                    # nothing at all, start with an empty commit
+                    # XXX right now we are starting with an arbitrary commit
+                    # XXX this is way too complicated, simplify
+                    # XXX and there is also implicit special handling of master
+                    # here: if there are no commits, there are no branches, and
+                    # the first (empty) commit creates master branch
+                    run('cd %s && if git status |grep -q "# Initial commit"; then git commit --allow-empty -m "Initial commit" && if test %s != master; then git checkout -b %s; fi; else git checkout -b %s; fi' % (deploy_dir, branch, branch, branch), shell=True)
 
     for branch in branches:
         git_in_dir(local_src, ['checkout', branch])
