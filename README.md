@@ -134,6 +134,12 @@ Buildploy has a test suite. Execute
 
 to run it.
 
+The test suite is disk I/O intensive but does not need much space. If
+you have a memory-backed /tmp partition you may want to use it as follows:
+
+	mkdir /tmp/buildploy-tests
+	ln -s /tmp/buildploy-tests tests/tmp
+
 <a href="https://travis-ci.org/p/buildploy"><img src="https://api.travis-ci.org/p/buildploy.png" alt="Travis build status" /></a>
 
 ## License
