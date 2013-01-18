@@ -128,7 +128,7 @@ Buildploy is written in Python and tested on Python 2.6, 2.7, 3.2 and 3.3.
 
 ## Tests
 
-Buildploy has a test suite. Run
+Buildploy has a test suite. Execute
 
 	python tests/run-tests.py
 
