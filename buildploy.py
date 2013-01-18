@@ -98,7 +98,7 @@ def main():
     for branch in branches:
         if branch != 'master':
             run('cd %s && git checkout %s || git branch %s master' % (deploy_dir, branch, branch), shell=True)
-        else:
+        elif branch in git_list_remote_branches(deploy_dir):
             run('cd %s && git checkout %s && git reset --hard deploy/%s' % (deploy_dir, branch, branch), shell=True)
 
     for branch in branches:
