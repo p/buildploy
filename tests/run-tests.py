@@ -4,11 +4,10 @@ import sys
 import yaml
 import os
 import os.path
-import subprocess
 
-def run(cmd, **kwargs):
-    print(repr(cmd), repr(kwargs))
-    subprocess.check_call(cmd, **kwargs)
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+from buildploy import run
 
 def discover_tests(test_specs_dir):
     tests = []
