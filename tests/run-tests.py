@@ -65,7 +65,7 @@ for test in tests:
     else:
         options = ''
     print('Building')
-    build_script = os.path.join(test_root, '../build')
+    build_script = os.path.join(test_root, '../buildploy.py')
     run('cd %s && %s scratch/config %s' % (test_tmp, build_script, options), shell=True)
     
     if 'deploy_tree' in spec:
