@@ -1,0 +1,6 @@
+- json support for configuration files
+- branch command line option
+- test for building without reset into an empty repository
+- escape everything for shell=True or better yet get rid of that
+- implement run_in_dir
+- add tests for transforming a branch that does and does not exist in deploy repo
