@@ -26,6 +26,10 @@ class UnitTest(unittest.TestCase):
             git clone upstream cloned
         ''' % self.test_dir, shell=True)
     
+    def test_git_list_local_branches(self):
+        branches = buildploy.git_list_local_branches(os.path.join(self.test_dir, 'upstream'))
+        assert 'a' in branches
+    
     def test_git_list_remote_branches(self):
         branches = buildploy.git_list_remote_branches(os.path.join(self.test_dir, 'cloned'))
         assert 'origin/a' in branches

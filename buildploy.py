@@ -55,6 +55,17 @@ def copy(build_dir, branch, config):
 def build(build_dir, branch, config):
     run('cd %s && (%s)' % (build_dir, config['build_cmd']), shell=True)
 
+def git_list_local_branches(dir):
+    branches = []
+    output = git_in_dir(dir, ['branch'], return_stdout=True)
+    output = output_to_string(output)
+    for line in output.split("\n"):
+        line = line.strip()
+        match = re.match(r'(\*\s+)?(\S+)', line)
+        if match:
+            branches.append(match.group(2))
+    return branches
+
 def git_list_remote_branches(dir):
     branches = []
     output = git_in_dir(dir, ['branch', '-r'], return_stdout=True)
