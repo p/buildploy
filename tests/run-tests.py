@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import re
 import sys
 import yaml
 import os
@@ -43,20 +44,22 @@ run('nosetests')
 for test in tests:
     print('Running %s' % test)
     
+    test_dir = os.path.join(test_tmp, re.sub(r'\..*', '', test))
+    
     path = os.path.join(test_specs_dir, test)
     with open(path) as f:
         spec = yaml.load(f)
     
-    run('cd %s && rm -rf scratch && mkdir scratch && cd scratch && (%s)' %
-        (test_tmp, spec['prepare']), shell=True)
+    run('cd %s && rm -rf %s && mkdir %s && cd %s && (%s)' %
+        (test_tmp, test_dir, test_dir, test_dir, spec['prepare']), shell=True)
     
     if 'config' in spec:
-        config_path = os.path.join(test_tmp, 'scratch/config')
+        config_path = os.path.join(test_dir, 'config')
         with open(config_path, 'w') as f:
             case_config = dict(spec['config'])
             for key in ['src_repo', 'deploy_repo', 'work_prefix']:
                 value = case_config[key]
-                value = os.path.join(test_tmp, 'scratch', value)
+                value = os.path.join(test_dir, value)
                 case_config[key] = value
             yaml.dump(case_config, f)
     
@@ -67,16 +70,16 @@ for test in tests:
         options = ''
     print('Building')
     build_script = os.path.join(test_root, '../buildploy.py')
-    run('cd %s && %s scratch/config %s' % (test_tmp, build_script, options), shell=True)
+    run('cd %s && %s %s/config %s' % (test_tmp, build_script, test_dir, options), shell=True)
     
     if 'deploy_tree' in spec:
         run('cd %s && git clone %s check' % (
-            os.path.join(test_tmp, 'scratch'),
+            test_dir,
             spec['config']['deploy_repo'],
         ), shell=True)
         
         relative_paths = []
-        start = os.path.join(test_tmp, 'scratch/check')
+        start = os.path.join(test_dir, 'check')
         for root, dirs, files in os.walk(start):
             if '.git' in dirs:
                 dirs.remove('.git')
@@ -91,6 +94,6 @@ for test in tests:
     
     if 'check' in spec:
         run('cd %s && (%s)' % (
-            os.path.join(test_tmp, 'scratch'),
+            test_dir,
             spec['check'],
         ), shell=True)
