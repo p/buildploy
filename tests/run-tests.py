@@ -7,7 +7,7 @@ import os.path
 import subprocess
 
 def run(cmd, **kwargs):
-    print repr(cmd), repr(kwargs)
+    print(repr(cmd), repr(kwargs))
     subprocess.check_call(cmd, **kwargs)
 
 def discover_tests(test_specs_dir):
@@ -50,7 +50,6 @@ for test in tests:
     if 'config' in spec:
         config_path = os.path.join(test_tmp, 'scratch/config')
         with open(config_path, 'w') as f:
-            print spec['config']
             case_config = dict(spec['config'])
             for key in ['src_repo', 'deploy_repo', 'work_prefix']:
                 value = case_config[key]

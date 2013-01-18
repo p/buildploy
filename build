@@ -8,7 +8,7 @@ import yaml
 import time
 
 def run(cmd, **kwargs):
-    print repr(cmd), repr(kwargs)
+    print(repr(cmd), repr(kwargs))
     subprocess.check_call(cmd, **kwargs)
 
 def git_in_dir(dir, args):
