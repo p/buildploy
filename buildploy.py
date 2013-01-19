@@ -52,8 +52,17 @@ def checkout(build_dir, branch):
 def copy(build_dir, branch, config):
     run(['rsync', '-a', '--exclude', '.git', config['src_repo'] + '/', build_dir, '--delete'])
 
+def run_in_dir(dir, cmd, **kwargs):
+    # for the benefit of fork-less platforms
+    cwd = os.getcwd()
+    os.chdir(dir)
+    try:
+        run(cmd, **kwargs)
+    finally:
+        os.chdir(cwd)
+
 def build(build_dir, branch, config):
-    run('cd %s && (%s)' % (build_dir, config['build_cmd']), shell=True)
+    run_in_dir(build_dir, config['build_cmd'], shell=True)
 
 def git_list_local_branches(dir):
     branches = []
@@ -111,14 +120,14 @@ def main():
     for branch in branches:
         # XXX test all paths
         if branch in local_branches:
-            run('cd %s && git checkout %s' % (deploy_dir, branch), shell=True)
+            git_in_dir(deploy_dir, ['checkout', branch])
             if branch in remote_branches:
-                run('cd %s && git reset --hard deploy/%s' % (deploy_dir, branch), shell=True)
+                git_in_dir(deploy_dir, ['reset', '--hard', 'deploy/%s' % branch])
             # else: branch is not in remote, will be created on push
         else:
             print(branch, local_branches)
             if branch in remote_branches:
-                run('cd %s && git checkout -b %s --track deploy/%s' % (deploy_dir, branch, branch), shell=True)
+                git_in_dir(deploy_dir, ['checkout', '-b', branch, '--track', 'deploy/%s' % branch])
             else:
                 # no local and no remote branch
                 if branch != 'master' and 'master' in local_branches:
@@ -133,7 +142,7 @@ def main():
                     # XXX and there is also implicit special handling of master
                     # here: if there are no commits, there are no branches, and
                     # the first (empty) commit creates master branch
-                    run('cd %s && if git status |grep -q "# Initial commit"; then git commit --allow-empty -m "Initial commit" && if test %s != master; then git checkout -b %s; fi; else git checkout -b %s; fi' % (deploy_dir, branch, branch, branch), shell=True)
+                    run_in_dir(deploy_dir, 'if git status |grep -q "# Initial commit"; then git commit --allow-empty -m "Initial commit" && if test %s != master; then git checkout -b %s; fi; else git checkout -b %s; fi' % (branch, branch, branch), shell=True)
 
     for branch in branches:
         git_in_dir(local_src, ['checkout', branch])
@@ -144,9 +153,9 @@ def main():
             # https://wincent.com/wiki/Creating_independent_branches_with_Git
             git_in_dir(deploy_dir, ['symbolic-ref', 'HEAD', 'refs/heads/newbranch'])
             run(['rm', '-f', os.path.join(deploy_dir, 'git/index')])
-            run('cd %s && rm -rf `git ls-files -o`' % deploy_dir, shell=True)
+            run_in_dir(deploy_dir, 'rm -rf `git ls-files -o`', shell=True)
             git_in_dir(deploy_dir, ['commit', '--allow-empty', '-m', 'New tree'])
-        run('cd %s && if git status |grep -q "# Initial commit"; then git commit --allow-empty -m "Initial commit"; fi' % deploy_dir, shell=True)
+        run_in_dir(deploy_dir, 'if git status |grep -q "# Initial commit"; then git commit --allow-empty -m "Initial commit"; fi', shell=True)
         git_in_dir(deploy_dir, ['checkout', branch])
         if options.reset_deploy_repo:
             git_in_dir(deploy_dir, ['reset', '--hard', 'newbranch'])
