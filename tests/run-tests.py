@@ -38,6 +38,7 @@ def run_spec(test):
     
     test_dir = os.path.join(test_tmp, remove_extension(test))
     
+    print('==> Preparing %s' % test)
     run('cd %s && rm -rf %s && mkdir %s && cd %s && (%s)' %
         (test_tmp, test_dir, test_dir, test_dir, spec['prepare']), shell=True)
     
@@ -51,15 +52,16 @@ def run_spec(test):
                 case_config[key] = value
             yaml.dump(case_config, f)
     
+    print('==> Building %s' % test)
     if 'options' in spec:
         # XXX escape options
         options = ' '.join(spec['options'])
     else:
         options = ''
-    print('Building')
     build_script = os.path.join(test_root, '../buildploy.py')
     run('cd %s && %s %s/config %s' % (test_tmp, build_script, test_dir, options), shell=True)
     
+    print('==> Checking %s' % test)
     if 'deploy_tree' in spec:
         run('cd %s && git clone %s check' % (
             test_dir,
