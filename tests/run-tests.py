@@ -8,7 +8,7 @@ import os.path
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from buildploy import run
+from buildploy import run, run_in_dir
 
 def discover_tests(test_specs_dir):
     tests = []
@@ -39,8 +39,8 @@ def run_spec(test):
     test_dir = os.path.join(test_tmp, remove_extension(test))
     
     print('==> Preparing %s' % test)
-    run('cd %s && rm -rf %s && mkdir %s && cd %s && (%s)' %
-        (test_tmp, test_dir, test_dir, test_dir, spec['prepare']), shell=True)
+    run_in_dir(test_tmp, 'rm -rf %s && mkdir %s && cd %s && (%s)' %
+        (test_dir, test_dir, test_dir, spec['prepare']), shell=True)
     
     if 'config' in spec:
         config_path = os.path.join(test_dir, 'config')
@@ -59,14 +59,11 @@ def run_spec(test):
     else:
         options = ''
     build_script = os.path.join(test_root, '../buildploy.py')
-    run('cd %s && %s %s/config %s' % (test_tmp, build_script, test_dir, options), shell=True)
+    run_in_dir(test_tmp, '%s %s/config %s' % (build_script, test_dir, options), shell=True)
     
     print('==> Checking %s' % test)
     if 'deploy_tree' in spec:
-        run('cd %s && git clone %s check' % (
-            test_dir,
-            spec['config']['deploy_repo'],
-        ), shell=True)
+        run_in_dir(test_dir, ['git', 'clone', spec['config']['deploy_repo'], 'check'])
         
         relative_paths = []
         start = os.path.join(test_dir, 'check')
@@ -83,10 +80,7 @@ def run_spec(test):
         assert relative_paths == expected_paths
     
     if 'check' in spec:
-        run('cd %s && (%s)' % (
-            test_dir,
-            spec['check'],
-        ), shell=True)
+        run_in_dir(test_dir, spec['check'], shell=True)
 
 tests = discover_tests(test_specs_dir)
 if len(sys.argv) > 1:
