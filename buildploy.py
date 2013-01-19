@@ -21,7 +21,7 @@ def output_to_string(output):
         return output
 
 def run(cmd, **kwargs):
-    print(repr(cmd), repr(kwargs))
+    #print(repr(cmd), repr(kwargs))
     if 'return_stdout' in kwargs:
         return_stdout = kwargs.pop('return_stdout')
         if return_stdout:
