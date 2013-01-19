@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import shutil
 import re
 import sys
 import yaml
@@ -39,8 +40,13 @@ def run_spec(test):
     test_dir = os.path.join(test_tmp, remove_extension(test))
     
     print('==> Preparing %s' % test)
-    run_in_dir(test_tmp, 'rm -rf %s && mkdir %s && cd %s && (%s)' %
-        (test_dir, test_dir, test_dir, spec['prepare']), shell=True)
+    if os.path.exists(test_dir):
+        if os.path.isdir(test_dir):
+            shutil.rmtree(test_dir)
+        else:
+            os.unlink(test_dir)
+    os.mkdir(test_dir)
+    run_in_dir(test_dir, spec['prepare'], shell=True)
     
     if 'config' in spec:
         config_path = os.path.join(test_dir, 'config')
