@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import shutil
 import re
 import sys
 import yaml
@@ -9,7 +8,7 @@ import os.path
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from buildploy import run, run_in_dir
+from buildploy import run, run_in_dir, rm_rf
 
 def discover_tests(test_specs_dir):
     tests = []
@@ -40,11 +39,7 @@ def run_spec(test):
     test_dir = os.path.join(test_tmp, remove_extension(test))
     
     print('==> Preparing %s' % test)
-    if os.path.exists(test_dir):
-        if os.path.isdir(test_dir):
-            shutil.rmtree(test_dir)
-        else:
-            os.unlink(test_dir)
+    rm_rf(test_dir)
     os.mkdir(test_dir)
     run_in_dir(test_dir, spec['prepare'], shell=True)
     

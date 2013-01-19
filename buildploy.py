@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import shutil
 import re
 import optparse
 import subprocess
@@ -86,11 +87,33 @@ def git_list_remote_branches(dir):
             branches.append(match.group(1))
     return branches
 
+def rm_f(path):
+    if os.path.exists(path):
+        os.unlink(path)
+
+def rm_rf(path):
+    '''Removes specified file or directory tree.
+    '''
+    
+    if not os.path.exists(path):
+        return
+    
+    if os.path.isdir(path):
+        shutil.rmtree(path)
+    else:
+        os.unlink(path)
+
 def git_reset_to_empty_tree(deploy_dir, branch):
     # https://wincent.com/wiki/Creating_independent_branches_with_Git
     git_in_dir(deploy_dir, ['symbolic-ref', 'HEAD', 'refs/heads/newbranch'])
-    run(['rm', '-f', os.path.join(deploy_dir, 'git/index')])
-    run_in_dir(deploy_dir, 'rm -rf `git ls-files -o`', shell=True)
+    index_path = os.path.join(deploy_dir, '.git/index')
+    rm_f(index_path)
+    output = git_in_dir(deploy_dir, ['ls-files', '-o'], return_stdout=True)
+    files = output_to_string(output)
+    for file in files.split("\n"):
+        file = file.strip()
+        if file:
+            rm_rf(os.path.join(deploy_dir, file))
     git_in_dir(deploy_dir, ['commit', '--allow-empty', '-m', 'New tree'])
     # XXX test both paths
     if branch in git_list_local_branches(deploy_dir):
