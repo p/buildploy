@@ -95,7 +95,7 @@ if len(sys.argv) > 1:
     for test in requested_tests:
         test = os.path.basename(test)
         if '.' not in test:
-            test += '.yaml'
+            test += '.yml'
         if test not in tests:
             raise ValueError('Test not found: %s' % test)
         found_tests.append(test)
