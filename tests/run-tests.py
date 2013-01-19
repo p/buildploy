@@ -59,13 +59,9 @@ def run_spec(test):
             yaml.dump(case_config, f)
     
     print('==> Building %s' % test)
-    if 'options' in spec:
-        # XXX escape options
-        options = ' '.join(spec['options'])
-    else:
-        options = ''
+    options = spec.get('options') or []
     build_script = os.path.join(test_root, '../buildploy.py')
-    run_in_dir(test_tmp, '%s %s/config %s' % (build_script, test_dir, options), shell=True)
+    run_in_dir(test_tmp, [build_script, '%s/config' % test_dir] + options)
     
     print('==> Checking %s' % test)
     if 'deploy_tree' in spec:
