@@ -4,7 +4,7 @@ import buildploy
 import unittest
 import shutil
 
-run = buildploy.run
+run_in_dir = buildploy.run_in_dir
 
 class UnitTest(unittest.TestCase):
     def setUp(self):
@@ -13,7 +13,7 @@ class UnitTest(unittest.TestCase):
         if os.path.exists(self.test_dir):
             shutil.rmtree(self.test_dir)
         os.mkdir(self.test_dir)
-        run('''cd %s &&
+        run_in_dir(self.test_dir, '''
             git init upstream &&
             cd upstream &&
             touch a &&
@@ -26,7 +26,7 @@ class UnitTest(unittest.TestCase):
             git branch b &&
             cd .. &&
             git clone upstream cloned
-        ''' % self.test_dir, shell=True)
+        ''', shell=True)
     
     def test_git_list_local_branches(self):
         branches = buildploy.git_list_local_branches(os.path.join(self.test_dir, 'upstream'))
