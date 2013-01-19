@@ -1,3 +1,4 @@
+import os
 import os.path
 import buildploy
 import unittest
@@ -7,7 +8,8 @@ run = buildploy.run
 
 class UnitTest(unittest.TestCase):
     def setUp(self):
-        self.test_dir = os.path.join(os.path.dirname(__file__), 'tmp/unit')
+        test_tmp = os.environ.get('TESTS_TMP') or os.path.join(os.path.dirname(__file__), 'tmp')
+        self.test_dir = os.path.join(test_tmp, 'unit')
         if os.path.exists(self.test_dir):
             shutil.rmtree(self.test_dir)
         os.mkdir(self.test_dir)

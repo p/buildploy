@@ -130,7 +130,7 @@ Buildploy is written in Python and tested on Python 2.6, 2.7, 3.2 and 3.3.
 
 Buildploy has a test suite. Execute
 
-	python tests/run-tests.py
+	make test
 
 to run it.
 
@@ -139,6 +139,18 @@ you have a memory-backed /tmp partition you may want to use it as follows:
 
 	mkdir /tmp/buildploy-tests
 	ln -s /tmp/buildploy-tests tests/tmp
+
+*Caution:* the test suite issues rather aggressive commands, including
+extensive usage of `rm -rf`. To minimize the possibility of accidental data
+loss, the test suite is designed to be run by an unprivileged user account.
+
+There are two ways of accomplishing this:
+
+1. Symlink tests/tmp to a directory owned by the unprivileged user, and
+run the test suite as that user.
+2. Specify TESTS_TMP environment variable as follows:
+
+	TESTS_TMP=/tmp/buildploy-tests make test
 
 <a href="https://travis-ci.org/p/buildploy"><img src="https://api.travis-ci.org/p/buildploy.png" alt="Travis build status" /></a>
 

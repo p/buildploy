@@ -21,7 +21,7 @@ def discover_tests(test_specs_dir):
 test_root = os.path.dirname(__file__)
 test_root = os.path.realpath(test_root)
 test_specs_dir = os.path.join(test_root, 'specs')
-test_tmp = os.path.join(test_root, 'tmp')
+test_tmp = os.environ.get('TESTS_TMP') or os.path.join(test_root, 'tmp')
 
 def remove_extension(basename):
     if '.' in basename:
