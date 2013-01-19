@@ -86,6 +86,20 @@ def git_list_remote_branches(dir):
             branches.append(match.group(1))
     return branches
 
+def git_reset_to_empty_tree(deploy_dir, branch):
+    # https://wincent.com/wiki/Creating_independent_branches_with_Git
+    git_in_dir(deploy_dir, ['symbolic-ref', 'HEAD', 'refs/heads/newbranch'])
+    run(['rm', '-f', os.path.join(deploy_dir, 'git/index')])
+    run_in_dir(deploy_dir, 'rm -rf `git ls-files -o`', shell=True)
+    git_in_dir(deploy_dir, ['commit', '--allow-empty', '-m', 'New tree'])
+    # XXX test both paths
+    if branch in git_list_local_branches(deploy_dir):
+        git_in_dir(deploy_dir, ['checkout', branch])
+        git_in_dir(deploy_dir, ['reset', '--hard', 'newbranch'])
+    else:
+        git_in_dir(deploy_dir, ['checkout', '-b', branch])
+    git_in_dir(deploy_dir, ['branch', '-d', 'newbranch'])
+
 def main():
     parser = optparse.OptionParser()
     parser.add_option('-p', '--push', action='store_true', dest='push')
@@ -118,48 +132,56 @@ def main():
     local_branches = git_list_local_branches(deploy_dir)
     remote_branches = git_list_remote_branches(deploy_dir)
     for branch in branches:
+        copy(build_dir, branch, config)
+        build(build_dir, branch, config)
+        
+        # Initial branch checkout:
+        # 1. Branch exists in local deploy repo - check it out
+        # 1.1. Branch also exists in remote deploy repo - hard reset to remote
+        # 1.2. Branch does not exist in remote - do nothing, will create
+        #      when pushing
+        # 2. Branch does not exist in local deploy repo:
+        # 2.1. Branch exists in remote deploy repo - create a new local branch
+        #      tracking the corresponding remote branch
+        # 2.2. Branch does not exist in remote:
+        #      We can start with current master or an empty tree.
+        #      Let's start with master if it exists, otherwise an empty tree.
         # XXX test all paths
+        already_reset = False
         if branch in local_branches:
             git_in_dir(deploy_dir, ['checkout', branch])
-            if branch in remote_branches:
+            if 'deploy/%s' % branch in remote_branches:
                 git_in_dir(deploy_dir, ['reset', '--hard', 'deploy/%s' % branch])
-            # else: branch is not in remote, will be created on push
         else:
-            print(branch, local_branches)
-            if branch in remote_branches:
+            if 'deploy/%s' % branch in remote_branches:
                 git_in_dir(deploy_dir, ['checkout', '-b', branch, '--track', 'deploy/%s' % branch])
             else:
                 # no local and no remote branch
-                if branch != 'master' and 'master' in local_branches:
-                    # initialize to master
-                    # XXX should we initialize to a new tree instead?
-                    git_in_dir(deploy_dir, ['checkout', 'master'])
-                    git_in_dir(deploy_dir, ['checkout', '-b', branch])
-                else:
-                    # nothing at all, start with an empty commit
-                    # XXX right now we are starting with an arbitrary commit
-                    # XXX this is way too complicated, simplify
-                    # XXX and there is also implicit special handling of master
-                    # here: if there are no commits, there are no branches, and
-                    # the first (empty) commit creates master branch
-                    run_in_dir(deploy_dir, 'if git status |grep -q "# Initial commit"; then git commit --allow-empty -m "Initial commit" && if test %s != master; then git checkout -b %s; fi; else git checkout -b %s; fi' % (branch, branch, branch), shell=True)
-
-    for branch in branches:
-        git_in_dir(local_src, ['checkout', branch])
-        #checkout(build_dir, branch)
-        copy(build_dir, branch, config)
-        build(build_dir, branch, config)
-        if options.reset_deploy_repo:
-            # https://wincent.com/wiki/Creating_independent_branches_with_Git
-            git_in_dir(deploy_dir, ['symbolic-ref', 'HEAD', 'refs/heads/newbranch'])
-            run(['rm', '-f', os.path.join(deploy_dir, 'git/index')])
-            run_in_dir(deploy_dir, 'rm -rf `git ls-files -o`', shell=True)
-            git_in_dir(deploy_dir, ['commit', '--allow-empty', '-m', 'New tree'])
-        run_in_dir(deploy_dir, 'if git status |grep -q "# Initial commit"; then git commit --allow-empty -m "Initial commit"; fi', shell=True)
-        git_in_dir(deploy_dir, ['checkout', branch])
-        if options.reset_deploy_repo:
-            git_in_dir(deploy_dir, ['reset', '--hard', 'newbranch'])
-            git_in_dir(deploy_dir, ['branch', '-D', 'newbranch'])
+                done = False
+                if branch != 'master':
+                    # attempt to copy from master
+                    have_master = False
+                    if 'master' in local_branches:
+                        git_in_dir(deploy_dir, ['checkout', 'master'])
+                        if 'master' in remote_branches:
+                            git_in_dir(deploy_dir, ['reset', '--hard', 'deploy/master'])
+                        have_master = True
+                    elif 'master' in remote_branches:
+                        git_in_dir(deploy_dir, ['checkout', '-b', 'master', '--track', 'deploy/master'])
+                        have_master = True
+                    if have_master:
+                        # copies master
+                        git_in_dir(deploy_dir, ['checkout', '-b', branch])
+                        done = True
+                if not done:
+                    # no master to copy from or we are dealing with master
+                    # branch itself; create an empty tree initial commit
+                    git_reset_to_empty_tree(deploy_dir, branch)
+                    already_reset = True
+        
+        if options.reset_deploy_repo and not already_reset:
+            git_reset_to_empty_tree(deploy_dir, branch)
+        
         if 'deploy_subdir' in config:
             deploy_src = os.path.join(build_dir, config['deploy_subdir'])
         else:
