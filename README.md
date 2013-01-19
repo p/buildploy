@@ -100,6 +100,8 @@ path accepted by Git, including a local filesystem path.
 deployable trees.
 - ``build_cmd`` - Command used to perform the build.
 
+Then, execute ``buildploy path/to/config.yaml``.
+
 JSON configuration files use the same schema but serialized in JSON.
 Buildploy detects configuration file type via its extension: .yaml and .yml
 files are considered YAML files, .json files are considered JSON files.
@@ -108,8 +110,6 @@ detection facility may be added in the future.
 
 JSON is part of Python standard library as of 2.6, and when using it
 buildploy has no dependencies. Using YAML requires installing PyYAML.
-
-Then, execute ``buildploy path/to/config.yaml``.
 
 ## Branches
 
