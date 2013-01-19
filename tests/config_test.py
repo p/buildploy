@@ -16,8 +16,10 @@ class YamlDisabled(base_exception):
 def disabled_yaml(*args):
     raise YamlDisabled
 
-class UnitTest(unittest.TestCase):
+class ConfigTest(unittest.TestCase):
     def setUp(self):
+        super(ConfigTest, self).setUp()
+        
         self.fixtures_dir = os.environ.get('TESTS_TMP') or os.path.join(os.path.dirname(__file__), 'fixtures')
     
     def test_yaml(self):

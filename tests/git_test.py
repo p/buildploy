@@ -8,6 +8,8 @@ run_in_dir = buildploy.run_in_dir
 
 class GitTest(unittest.TestCase):
     def setUp(self):
+        super(GitTest, self).setUp()
+        
         test_tmp = os.environ.get('TESTS_TMP') or os.path.join(os.path.dirname(__file__), 'tmp')
         self.test_dir = os.path.join(test_tmp, 'unit')
         if os.path.exists(self.test_dir):
