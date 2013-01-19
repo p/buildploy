@@ -1,0 +1,24 @@
+# This test checks that it is possible to perform the build
+# when source repository has no files (but does have an empty commit).
+# This test uses a deployment repository that is initially populated.
+# After the build the deployment repository should have no files.
+prepare: >
+  git init foosrc &&
+  cd foosrc &&
+  git commit -m 'Empty commit' --allow-empty &&
+  cd .. &&
+  git init foodeploy.git --bare &&
+  git clone foodeploy.git foodeploy &&
+  cd foodeploy &&
+  git commit -m 'Initial commit' --allow-empty &&
+  touch foo &&
+  git add . &&
+  git commit -m 'Add foo LiktowOurr' &&
+  git push origin master
+config:
+  src_repo: foosrc
+  deploy_repo: foodeploy.git
+  work_prefix: work
+  build_cmd: 'true'
+deploy_tree:
+  master: []
