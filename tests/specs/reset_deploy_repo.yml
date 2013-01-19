@@ -1,5 +1,6 @@
-# Basic test, checks that a trivial source to deployment tree
-# transformation works.
+# This test checks that when using deployment repository reset feature,
+# all history prior to the build being done is erased from the deployment
+# repository.
 prepare: >
   git init foosrc &&
   cd foosrc &&
