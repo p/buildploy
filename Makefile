@@ -1,4 +1,6 @@
-all: build/README.html test
+all: doc test
+
+doc: build/README.html
 
 build/README.html: build README.md
 	markdown_py -f build/README.html README.md
