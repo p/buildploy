@@ -6,7 +6,6 @@ import optparse
 import subprocess
 import os.path
 import sys
-import yaml
 import time
 
 py3 = sys.version_info[0] == 3
@@ -124,8 +123,14 @@ def git_reset_to_empty_tree(deploy_dir, branch):
     git_in_dir(deploy_dir, ['branch', '-d', 'newbranch'])
 
 def load_config_file(path):
+    if path.endswith('.json'):
+        import json
+        load_fn = json.load
+    else:
+        import yaml
+        load_fn = yaml.load
     with open(path) as f:
-        config = yaml.load(f)
+        config = load_fn(f)
     return config
 
 def main():

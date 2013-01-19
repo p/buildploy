@@ -83,7 +83,8 @@ To use buildploy, you need:
 3. A configuration file informing buildploy of where the repositories are
 and how the project should be built.
 
-Configuration files are in YAML format and look like this:
+Configuration files can be in YAML or JSON format.
+YAML configuration files look like this:
 
 	src_repo: git@github.com:foo/foo.git
 	deploy_repo: git@github.com:foo/foo-deploy.git
@@ -98,6 +99,15 @@ path accepted by Git, including a local filesystem path.
 - ``work_prefix`` - Path to a local directory that is used for building
 deployable trees.
 - ``build_cmd`` - Command used to perform the build.
+
+JSON configuration files use the same schema but serialized in JSON.
+Buildploy detects configuration file type via its extension: .yaml and .yml
+files are considered YAML files, .json files are considered JSON files.
+The default for other extensions is currently YAML, although an automatic
+detection facility may be added in the future.
+
+JSON is part of Python standard library as of 2.6, and when using it
+buildploy has no dependencies. Using YAML requires installing PyYAML.
 
 Then, execute ``buildploy path/to/config.yaml``.
 

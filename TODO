@@ -1,4 +1,4 @@
-- json support for configuration files
+- command line option to force yaml/json for configuration file
 - branch command line option
 - test for building without reset into an empty repository
 - add tests for transforming a branch that does and does not exist in deploy repo

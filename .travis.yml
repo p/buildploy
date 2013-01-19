@@ -3,5 +3,5 @@ python:
   - "2.6"
   - "2.7"
   - "3.2"
-install: "pip install -r requirements.txt --use-mirrors"
+install: "pip install -r requirements-dev.txt --use-mirrors"
 script: python tests/run-tests.py

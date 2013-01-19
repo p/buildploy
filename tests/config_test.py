@@ -1,6 +1,20 @@
 import os.path
 import buildploy
 import unittest
+import mock
+
+try:
+    # py 2
+    base_exception = StandardError
+except NameError:
+    # py 3
+    base_exception = Exception
+
+class YamlDisabled(base_exception):
+    pass
+
+def disabled_yaml(*args):
+    raise YamlDisabled
 
 class UnitTest(unittest.TestCase):
     def setUp(self):
@@ -12,6 +26,17 @@ class UnitTest(unittest.TestCase):
     def test_yml(self):
         self.check('yaml_config.yml')
     
+    @mock.patch('yaml.load', disabled_yaml)
+    def test_yaml_patching(self):
+        # this just checks that our patch works
+        try:
+            self.check('yaml_config.yml')
+        except YamlDisabled:
+            pass
+        else:
+            self.fail('Patch did not work')
+    
+    @mock.patch('yaml.load', disabled_yaml)
     def test_json(self):
         self.check('json_config.json')
     
