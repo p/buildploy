@@ -6,7 +6,7 @@ import shutil
 
 run_in_dir = buildploy.run_in_dir
 
-class UnitTest(unittest.TestCase):
+class GitTest(unittest.TestCase):
     def setUp(self):
         test_tmp = os.environ.get('TESTS_TMP') or os.path.join(os.path.dirname(__file__), 'tmp')
         self.test_dir = os.path.join(test_tmp, 'unit')
