@@ -1,0 +1,5 @@
+src_repo: /path/to/src/repo
+deploy_repo: git@github.com:user/deploy.git
+work_prefix: /path/to/work
+build_cmd: make
+deploy_subdir: build

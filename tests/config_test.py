@@ -1,0 +1,31 @@
+import os.path
+import buildploy
+import unittest
+
+class UnitTest(unittest.TestCase):
+    def setUp(self):
+        self.fixtures_dir = os.environ.get('TESTS_TMP') or os.path.join(os.path.dirname(__file__), 'fixtures')
+    
+    def test_yaml(self):
+        self.check('yaml_config.yaml')
+    
+    def test_yml(self):
+        self.check('yaml_config.yml')
+    
+    def test_json(self):
+        self.check('json_config.json')
+    
+    def check(self, config_file_path):
+        config = buildploy.load_config_file(os.path.join(self.fixtures_dir, config_file_path))
+        
+        expected = {
+            'src_repo': '/path/to/src/repo',
+            'deploy_repo': 'git@github.com:user/deploy.git',
+            'work_prefix': '/path/to/work',
+            'build_cmd': 'make',
+            'deploy_subdir': 'build',
+        }
+        self.assertEqual(expected, config)
+
+if __name__ == '__main__':
+    unittest.main()

@@ -123,6 +123,11 @@ def git_reset_to_empty_tree(deploy_dir, branch):
         git_in_dir(deploy_dir, ['checkout', '-b', branch])
     git_in_dir(deploy_dir, ['branch', '-d', 'newbranch'])
 
+def load_config_file(path):
+    with open(path) as f:
+        config = yaml.load(f)
+    return config
+
 def main():
     parser = optparse.OptionParser()
     parser.add_option('-p', '--push', action='store_true', dest='push')
@@ -131,8 +136,7 @@ def main():
     options, args = parser.parse_args()
 
     config_file = sys.argv[1]
-    with open(config_file) as f:
-        config = yaml.load(f)
+    config = load_config_file(config_file)
 
     branches = config.get('branches', ['master'])
 
