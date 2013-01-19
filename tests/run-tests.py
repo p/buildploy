@@ -23,32 +23,20 @@ test_root = os.path.realpath(test_root)
 test_specs_dir = os.path.join(test_root, 'specs')
 test_tmp = os.path.join(test_root, 'tmp')
 
-tests = discover_tests(test_specs_dir)
-if len(sys.argv) > 1:
-    requested_tests = sys.argv[1:]
-    found_tests = []
-    for test in requested_tests:
-        test = os.path.basename(test)
-        if '.' not in test:
-            test += '.yaml'
-        if test not in tests:
-            raise ValueError('Test not found: %s' % test)
-        found_tests.append(test)
-    tests = found_tests
+def remove_extension(basename):
+    if '.' in basename:
+        return basename[:basename.find('.')]
+    else:
+        return basename
 
-if not os.path.exists(test_tmp):
-    os.mkdir(test_tmp)
-
-run('nosetests')
-
-for test in tests:
+def run_spec(test):
     print('Running %s' % test)
     
-    test_dir = os.path.join(test_tmp, re.sub(r'\..*', '', test))
-    
-    path = os.path.join(test_specs_dir, test)
-    with open(path) as f:
+    spec_path = os.path.join(test_specs_dir, test)
+    with open(spec_path) as f:
         spec = yaml.load(f)
+    
+    test_dir = os.path.join(test_tmp, remove_extension(test))
     
     run('cd %s && rm -rf %s && mkdir %s && cd %s && (%s)' %
         (test_tmp, test_dir, test_dir, test_dir, spec['prepare']), shell=True)
@@ -97,3 +85,24 @@ for test in tests:
             test_dir,
             spec['check'],
         ), shell=True)
+
+tests = discover_tests(test_specs_dir)
+if len(sys.argv) > 1:
+    requested_tests = sys.argv[1:]
+    found_tests = []
+    for test in requested_tests:
+        test = os.path.basename(test)
+        if '.' not in test:
+            test += '.yaml'
+        if test not in tests:
+            raise ValueError('Test not found: %s' % test)
+        found_tests.append(test)
+    tests = found_tests
+
+if not os.path.exists(test_tmp):
+    os.mkdir(test_tmp)
+
+run('nosetests')
+
+for test in tests:
+    run_spec(test)
