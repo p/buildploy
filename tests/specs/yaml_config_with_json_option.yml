@@ -1,0 +1,13 @@
+# This test uses valid yaml configuration, but specifies that the
+# configuration format is json. Build is supposed to fail.
+prepare: >
+config:
+  src_repo: foosrc
+  deploy_repo: foodeploy.git
+  work_prefix: work
+  build_cmd: sh foobuild
+options: 
+  - '--json-config'
+expect_failure: true
+check_output: >
+  grep -q 'Failed to load configuration file'
