@@ -111,6 +111,9 @@ detection facility may be added in the future.
 JSON is part of Python standard library as of 2.6, and when using it
 buildploy has no dependencies. Using YAML requires installing PyYAML.
 
+Configuration file format may be explicitly specified using
+``--yaml-config`` and ``--json-config`` command line options.
+
 ## Branches
 
 By default buildploy transforms the master branch of the source repository.
