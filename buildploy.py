@@ -10,6 +10,14 @@ import time
 
 py3 = sys.version_info[0] == 3
 
+if py3:
+    base_exception = Exception
+else:
+    base_exception = StandardError
+
+class ConfigurationFileError(base_exception):
+    pass
+
 def output_to_string(output):
     '''Converts output of a process invoked via subprocess module,
     which is of type bytes on python 3, to a string.
@@ -130,7 +138,12 @@ def load_config_file(path):
         import yaml
         load_fn = yaml.load
     with open(path) as f:
-        config = load_fn(f)
+        try:
+            config = load_fn(f)
+        except ValueError as exc:
+            new_exc = ConfigurationFileError('Failed to load configuration file: %s: %s: %s' % (path, exc.__class__.__name__, str(exc)))
+            new_exc.__cause__ = exc
+            raise new_exc
     return config
 
 def main():
