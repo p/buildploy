@@ -1,0 +1,27 @@
+# A copy of the basic test with specified configuration file name
+# (with json extension) and command line option to trat it as yaml.
+prepare: >
+  git init foosrc &&
+  cd foosrc &&
+  touch a &&
+  printf "#!/bin/sh\ntouch b\nrm a" >foobuild &&
+  git add . &&
+  git commit -m 'Initial commit' &&
+  cd .. &&
+  git init foodeploy.git --bare &&
+  git clone foodeploy.git foodeploy &&
+  cd foodeploy &&
+  git commit -m 'Initial commit' --allow-empty &&
+  git push origin master
+config:
+  src_repo: foosrc
+  deploy_repo: foodeploy.git
+  work_prefix: work
+  build_cmd: sh foobuild
+config_file_name: config.json
+options: 
+  - '--yaml-config'
+deploy_tree:
+  master:
+    - b
+    - foobuild

@@ -135,8 +135,15 @@ def git_reset_to_empty_tree(deploy_dir, branch):
         git_in_dir(deploy_dir, ['checkout', '-b', branch])
     git_in_dir(deploy_dir, ['branch', '-d', 'newbranch'])
 
-def load_config_file(path):
-    if path.endswith('.json'):
+def load_config_file(path, format=None):
+    if format is None:
+        if path.endswith('.json'):
+            format = 'json'
+        else:
+            format = 'yaml'
+    elif format not in ['yaml', 'json']:
+        raise ValueError('Invalid format: %s (must be `yaml` or `json`)' % format)
+    if format == 'json':
         import json
         load_fn = json.load
     else:
@@ -155,11 +162,22 @@ def main():
     parser = optparse.OptionParser()
     parser.add_option('-p', '--push', action='store_true', dest='push')
     parser.add_option('-P', '--no-push', action='store_false', dest='push')
+    parser.add_option('--yaml-config', action='store_true', dest='yaml_config', help='Interpret configuration as YAML')
+    parser.add_option('--json-config', action='store_true', dest='json_config', help='Interpret configuration as JSON')
     parser.add_option('--reset-deploy-repo', action='store_true', dest='reset_deploy_repo')
     options, args = parser.parse_args()
+    
+    if options.yaml_config and options.json_config:
+        raise ValueError('--yaml-config and --json-config cannot be both specified')
 
     config_file = sys.argv[1]
-    config = load_config_file(config_file)
+    if options.yaml_config:
+        format = 'yaml'
+    elif options.json_config:
+        format = 'json'
+    else:
+        format = None
+    config = load_config_file(config_file, format)
 
     branches = config.get('branches', ['master'])
 
