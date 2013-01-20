@@ -44,7 +44,12 @@ def run(cmd, **kwargs):
             if p.returncode != 0:
                 raise subprocess.CalledProcessError('Command failed with code %d' % p.returncocde)
             return stdout
-    subprocess.check_call(cmd, **kwargs)
+    if 'return_code' in kwargs:
+        del kwargs['return_code']
+        fn = subprocess.call
+    else:
+        fn = subprocess.check_call
+    return fn(cmd, **kwargs)
 
 def git_in_dir(dir, args, **kwargs):
     cmd = ['git',

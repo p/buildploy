@@ -1,0 +1,11 @@
+# Test that YAML configuration is rejected when supplied as JSON.
+prepare: >
+config:
+  src_repo: foosrc
+  deploy_repo: foodeploy.git
+  work_prefix: work
+  build_cmd: sh foobuild
+config_file_name: config.json
+expect_failure: true
+check_output: >
+  grep -q 'Failed to load configuration file'

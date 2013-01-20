@@ -5,6 +5,7 @@ import sys
 import yaml
 import os
 import os.path
+import subprocess
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -44,7 +45,8 @@ def run_spec(test):
     run_in_dir(test_dir, spec['prepare'], shell=True)
     
     if 'config' in spec:
-        config_path = os.path.join(test_dir, 'config')
+        config_file_name = spec.get('config_file_name', 'config')
+        config_path = os.path.join(test_dir, config_file_name)
         with open(config_path, 'w') as f:
             case_config = dict(spec['config'])
             for key in ['src_repo', 'deploy_repo', 'work_prefix']:
@@ -56,28 +58,41 @@ def run_spec(test):
     print('==> Building %s' % test)
     options = spec.get('options') or []
     build_script = os.path.join(test_root, '../buildploy.py')
-    run_in_dir(test_tmp, [build_script, '%s/config' % test_dir] + options)
-    
-    print('==> Checking %s' % test)
-    if 'deploy_tree' in spec:
-        run_in_dir(test_dir, ['git', 'clone', spec['config']['deploy_repo'], 'check'])
+    build_output_path = os.path.join(test_dir, 'build_output')
+    with open(build_output_path, 'w+') as build_output_f:
+        code = run_in_dir(test_tmp, [build_script, config_path] + options,
+            return_code=True,
+            stdout=build_output_f, stderr=subprocess.STDOUT,
+            )
+        if spec.get('expect_failure'):
+            assert code != 0
+        else:
+            assert code == 0
         
-        relative_paths = []
-        start = os.path.join(test_dir, 'check')
-        for root, dirs, files in os.walk(start):
-            if '.git' in dirs:
-                dirs.remove('.git')
-            for file in files:
-                relative_paths.append(os.path.join(root, file)[len(start)+1:])
-        relative_paths.sort()
+        print('==> Checking %s' % test)
+        if 'deploy_tree' in spec:
+            run_in_dir(test_dir, ['git', 'clone', spec['config']['deploy_repo'], 'check'])
+            
+            relative_paths = []
+            start = os.path.join(test_dir, 'check')
+            for root, dirs, files in os.walk(start):
+                if '.git' in dirs:
+                    dirs.remove('.git')
+                for file in files:
+                    relative_paths.append(os.path.join(root, file)[len(start)+1:])
+            relative_paths.sort()
+            
+            expected_paths = list(spec['deploy_tree']['master'])
+            expected_paths.sort
+            
+            assert relative_paths == expected_paths
         
-        expected_paths = list(spec['deploy_tree']['master'])
-        expected_paths.sort
+        if 'check' in spec:
+            run_in_dir(test_dir, spec['check'], shell=True)
         
-        assert relative_paths == expected_paths
-    
-    if 'check' in spec:
-        run_in_dir(test_dir, spec['check'], shell=True)
+        if 'check_output' in spec:
+            build_output_f.seek(0)
+            run_in_dir(test_dir, spec['check_output'], shell=True, stdin=build_output_f)
 
 tests = discover_tests(test_specs_dir)
 if len(sys.argv) > 1:
