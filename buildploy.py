@@ -60,22 +60,22 @@ def git_in_dir(dir, args, **kwargs):
 
 def checkout(build_dir, branch):
     git_in_dir(local_src, ['checkout', branch])
-    run(['rsync', '-a', local_src + '/', build_dir, '--delete'])
+    return run(['rsync', '-a', local_src + '/', build_dir, '--delete'])
 
 def copy(build_dir, branch, config):
-    run(['rsync', '-a', '--exclude', '.git', config['src_repo'] + '/', build_dir, '--delete'])
+    return run(['rsync', '-a', '--exclude', '.git', config['src_repo'] + '/', build_dir, '--delete'])
 
 def run_in_dir(dir, cmd, **kwargs):
     # for the benefit of fork-less platforms
     cwd = os.getcwd()
     os.chdir(dir)
     try:
-        run(cmd, **kwargs)
+        return run(cmd, **kwargs)
     finally:
         os.chdir(cwd)
 
 def build(build_dir, branch, config):
-    run_in_dir(build_dir, config['build_cmd'], shell=True)
+    return run_in_dir(build_dir, config['build_cmd'], shell=True)
 
 def git_list_local_branches(dir):
     branches = []

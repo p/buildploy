@@ -65,9 +65,19 @@ def run_spec(test):
             stdout=build_output_f, stderr=subprocess.STDOUT,
             )
         if spec.get('expect_failure'):
-            assert code != 0
+            ok = code != 0
         else:
-            assert code == 0
+            ok = code == 0
+        if not ok:
+            if spec.get('expect_failure'):
+                msg = 'Failure expected but build completed successfully'
+            else:
+                msg = 'Build failed'
+            build_output_f.seek(0)
+            output = build_output_f.read()
+            print(output)
+            print(msg)
+            assert ok
         
         print('==> Checking %s' % test)
         if 'deploy_tree' in spec:
