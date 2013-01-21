@@ -10,3 +10,6 @@ build:
 
 test:
 	python tests/run-tests.py
+
+spec-index:
+	python tests/build-spec-index.py
