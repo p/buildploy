@@ -1,1 +1,3 @@
-- branch command line option
+- tests for branch command line option
+- deal with the repo vs working copy situation
+- reset deploy repo option is not correctly named

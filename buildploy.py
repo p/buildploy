@@ -160,11 +160,18 @@ def load_config_file(path, format=None):
 
 def main():
     parser = optparse.OptionParser()
-    parser.add_option('-p', '--push', action='store_true', dest='push')
-    parser.add_option('-P', '--no-push', action='store_false', dest='push')
-    parser.add_option('--yaml-config', action='store_true', dest='yaml_config', help='Interpret configuration as YAML')
-    parser.add_option('--json-config', action='store_true', dest='json_config', help='Interpret configuration as JSON')
-    parser.add_option('--reset-deploy-repo', action='store_true', dest='reset_deploy_repo')
+    parser.add_option('-b', '--branch', action='store', dest='branch',
+        help='Transform specified branch')
+    parser.add_option('-p', '--push', action='store_true', dest='push',
+        help='Push built tree to deployment repository (default)')
+    parser.add_option('-P', '--no-push', action='store_false', dest='push',
+        help='Do not push built tree to deployment repository (local build only)')
+    parser.add_option('--yaml-config', action='store_true', dest='yaml_config',
+        help='Interpret configuration as YAML')
+    parser.add_option('--json-config', action='store_true', dest='json_config',
+        help='Interpret configuration as JSON')
+    parser.add_option('--reset-deploy-repo', action='store_true', dest='reset_deploy_repo',
+        help='Discard history of branches being transformed in deployment repository')
     options, args = parser.parse_args()
     
     if options.yaml_config and options.json_config:
@@ -178,8 +185,11 @@ def main():
     else:
         format = None
     config = load_config_file(config_file, format)
-
-    branches = config.get('branches', ['master'])
+    
+    if options.branch:
+        branches = [options.branch]
+    else:
+        branches = config.get('branches', ['master'])
 
     local_src = os.path.join(config['work_prefix'], 'src')
     if not os.path.exists(local_src):
