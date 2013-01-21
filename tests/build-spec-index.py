@@ -7,7 +7,7 @@ import re
 index = ''
 spec_dir = os.path.join(os.path.dirname(__file__), 'specs')
 for entry in sorted(os.listdir(spec_dir)):
-    if entry[0] == '.' or not entry.endswith('.yml'):
+    if entry[0] == '.':
         continue
     
     path = os.path.join(spec_dir, entry)
@@ -27,5 +27,5 @@ for entry in sorted(os.listdir(spec_dir)):
 index = index[:len(index)-1]
 index = "# Spec index\n\n%s" % index
 
-with open(os.path.join(spec_dir, 'INDEX.md'), 'w') as f:
+with open(os.path.join(spec_dir, '../../build/spec-index.md'), 'w') as f:
     f.write(index)
