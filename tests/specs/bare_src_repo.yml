@@ -1,0 +1,25 @@
+# Checks that a bare repository can be used for source repository.
+prepare: >
+  git init foosrc.git --bare &&
+  git clone foosrc.git foosrc &&
+  cd foosrc &&
+  touch a &&
+  printf "#!/bin/sh\ntouch b\nrm a" >foobuild &&
+  git add . &&
+  git commit -m 'Initial commit' &&
+  git push origin master &&
+  cd .. &&
+  git init foodeploy.git --bare &&
+  git clone foodeploy.git foodeploy &&
+  cd foodeploy &&
+  git commit -m 'Initial commit' --allow-empty &&
+  git push origin master
+config:
+  src_repo: foosrc.git
+  deploy_repo: foodeploy.git
+  work_prefix: work
+  build_cmd: sh foobuild
+deploy_tree:
+  master:
+    - b
+    - foobuild

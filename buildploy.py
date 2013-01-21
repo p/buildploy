@@ -58,8 +58,8 @@ def git_in_dir(dir, args, **kwargs):
     cmd.extend(args)
     return run(cmd, **kwargs)
 
-def checkout(build_dir, branch):
-    git_in_dir(local_src, ['checkout', branch])
+def checkout(local_src, build_dir, branch):
+    git_in_dir(local_src, ['checkout', 'src/%s' % branch])
     return run(['rsync', '-a', local_src + '/', build_dir, '--delete'])
 
 def copy(build_dir, branch, config):
@@ -210,7 +210,8 @@ def main():
     local_branches = git_list_local_branches(deploy_dir)
     remote_branches = git_list_remote_branches(deploy_dir)
     for branch in branches:
-        copy(build_dir, branch, config)
+        checkout(local_src, build_dir, branch)
+        #copy(build_dir, branch, config)
         build(build_dir, branch, config)
         
         # Initial branch checkout:
