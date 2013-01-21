@@ -1,3 +1,1 @@
 - branch command line option
-- test for building without reset into an empty repository
-- add tests for transforming a branch that does and does not exist in deploy repo

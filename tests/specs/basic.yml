@@ -1,5 +1,6 @@
 # Basic test, checks that a trivial source to deployment tree
 # transformation works.
+# The branch being transformed exists in the deployment repository.
 prepare: >
   git init foosrc &&
   cd foosrc &&
