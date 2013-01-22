@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# Note: rsync must be invoked with -I argument, as it is possible for
+# files in different branches to have identical size, and if the filesystem
+# is quick enough the files in different branches may have identical timestamp.
+
 import shutil
 import re
 import optparse
@@ -64,10 +68,10 @@ def git_in_dir(dir, args, **kwargs):
 
 def checkout(local_src, build_dir, branch):
     git_in_dir(local_src, ['checkout', 'src/%s' % branch])
-    run(['rsync', '-a', '--exclude', '.git', local_src + '/', build_dir, '--delete'])
+    run(['rsync', '-aI', '--exclude', '.git', local_src + '/', build_dir, '--delete'])
 
 def copy(build_dir, branch, config):
-    run(['rsync', '-a', '--exclude', '.git', config['src_repo'] + '/', build_dir, '--delete'])
+    run(['rsync', '-aI', '--exclude', '.git', config['src_repo'] + '/', build_dir, '--delete'])
 
 def run_in_dir(dir, cmd, **kwargs):
     # for the benefit of fork-less platforms
@@ -269,7 +273,7 @@ def main():
             deploy_src = os.path.join(build_dir, config['deploy_subdir'])
         else:
             deploy_src = build_dir
-        run(['rsync', '-a', '--exclude', '.git', deploy_src + '/', deploy_dir, '--delete'])
+        run(['rsync', '-aI', '--exclude', '.git', deploy_src + '/', deploy_dir, '--delete'])
         git_in_dir(deploy_dir, ['add', '-u'])
         git_in_dir(deploy_dir, ['add', '.'])
         git_in_dir(deploy_dir, ['commit', '--allow-empty', '-m', 'Built at %s' % time.time()])
