@@ -139,3 +139,5 @@ run('nosetests')
 
 for test in tests:
     run_spec(test)
+
+print('Success.')
