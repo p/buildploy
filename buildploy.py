@@ -8,6 +8,8 @@ import os.path
 import sys
 import time
 
+debug = False
+
 py3 = sys.version_info[0] == 3
 
 if py3:
@@ -29,7 +31,9 @@ def output_to_string(output):
         return output
 
 def run(cmd, **kwargs):
-    #print(repr(cmd), repr(kwargs))
+    if debug:
+        print(repr(cmd), repr(kwargs))
+        sys.stdout.flush()
     if 'return_stdout' in kwargs:
         return_stdout = kwargs.pop('return_stdout')
         if return_stdout:
