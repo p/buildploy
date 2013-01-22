@@ -42,4 +42,4 @@ check: >
   echo 'The following command should produce an error referring to missing origin/master:' &&
   ! git checkout origin/master &&
   echo 'The following command should produce an error referring to missing origin/master:' &&
-  ! git checkout origin/branch-two &&
+  ! git checkout origin/branch-two
