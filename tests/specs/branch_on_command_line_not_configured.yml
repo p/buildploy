@@ -1,0 +1,45 @@
+# This is the same test as branch_on_command_line except
+# configuration does not mention the branch we are trying to build at all.
+prepare: >
+  git init foosrc.git --bare &&
+  git clone foosrc.git foosrc &&
+  cd foosrc &&
+  git commit --allow-empty -m 'Empty tree' &&
+  git checkout -b branch-one &&
+  touch file-one &&
+  printf "#!/bin/sh\ntouch built-one" >foobuild &&
+  git add . &&
+  git commit -m 'Initial commit (branch one)' &&
+  git checkout master &&
+  git checkout -b branch-two &&
+  touch file-two &&
+  printf "#!/bin/sh\ntouch built-two" >foobuild &&
+  git add . &&
+  git commit -m 'Initial commit (branch two)' &&
+  git checkout master &&
+  touch file-master &&
+  git add . &&
+  git commit -m 'Initial commit (master)' &&
+  git push origin master branch-one branch-two &&
+  cd .. &&
+  git init foodeploy.git --bare
+config:
+  src_repo: foosrc.git
+  deploy_repo: foodeploy.git
+  work_prefix: work
+  build_cmd: sh foobuild
+options:
+  - '-b'
+  - branch-one
+deploy_tree:
+  branch-one:
+    - file-one
+    - built-one
+    - foobuild
+check: >
+  git clone foodeploy.git check-foodeploy &&
+  cd check-foodeploy &&
+  echo 'The following command should produce an error referring to missing origin/master:' &&
+  ! git checkout origin/master &&
+  echo 'The following command should produce an error referring to missing origin/master:' &&
+  ! git checkout origin/branch-two &&
