@@ -9,7 +9,7 @@ import subprocess
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from buildploy import run, run_in_dir, rm_rf
+from buildploy import run, run_in_dir, git_in_dir, rm_rf
 
 def discover_tests(test_specs_dir):
     tests = []
@@ -29,6 +29,16 @@ def remove_extension(basename):
         return basename[:basename.find('.')]
     else:
         return basename
+
+def find_files_under(start_path):
+    relative_paths = []
+    for root, dirs, files in os.walk(start_path):
+        if '.git' in dirs:
+            dirs.remove('.git')
+        for file in files:
+            relative_paths.append(os.path.join(root, file)[len(start_path)+1:])
+    relative_paths.sort()
+    return relative_paths
 
 def run_spec(test):
     print('Running %s' % test)
@@ -83,19 +93,24 @@ def run_spec(test):
         if 'deploy_tree' in spec:
             run_in_dir(test_dir, ['git', 'clone', spec['config']['deploy_repo'], 'check'])
             
-            relative_paths = []
-            start = os.path.join(test_dir, 'check')
-            for root, dirs, files in os.walk(start):
-                if '.git' in dirs:
-                    dirs.remove('.git')
-                for file in files:
-                    relative_paths.append(os.path.join(root, file)[len(start)+1:])
-            relative_paths.sort()
-            
-            expected_paths = list(spec['deploy_tree']['master'])
-            expected_paths.sort
-            
-            assert relative_paths == expected_paths
+            check_dir = os.path.join(test_dir, 'check')
+            for branch in spec['deploy_tree']:
+                git_in_dir(check_dir, ['checkout', 'origin/%s' % branch])
+                expected_paths = list(spec['deploy_tree'][branch])
+                expected_paths.sort()
+                
+                start = os.path.join(test_dir, 'check')
+                relative_paths = find_files_under(start)
+                
+                if relative_paths != expected_paths:
+                    msg = "Post-build paths did not match expected list:\n"
+                    msg += "Expected:\n"
+                    for path in expected_paths:
+                        msg += " - %s\n" % path
+                    msg += "Actual:\n"
+                    for path in relative_paths:
+                        msg += " - %s\n" % path
+                    raise AssertionError(msg)
         
         if 'check' in spec:
             run_in_dir(test_dir, spec['check'], shell=True)
