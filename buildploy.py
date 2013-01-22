@@ -60,10 +60,10 @@ def git_in_dir(dir, args, **kwargs):
 
 def checkout(local_src, build_dir, branch):
     git_in_dir(local_src, ['checkout', 'src/%s' % branch])
-    return run(['rsync', '-a', local_src + '/', build_dir, '--delete'])
+    run(['rsync', '-a', '--exclude', '.git', local_src + '/', build_dir, '--delete'])
 
 def copy(build_dir, branch, config):
-    return run(['rsync', '-a', '--exclude', '.git', config['src_repo'] + '/', build_dir, '--delete'])
+    run(['rsync', '-a', '--exclude', '.git', config['src_repo'] + '/', build_dir, '--delete'])
 
 def run_in_dir(dir, cmd, **kwargs):
     # for the benefit of fork-less platforms
