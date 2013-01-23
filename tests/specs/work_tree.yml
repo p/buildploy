@@ -1,0 +1,19 @@
+# This tests --work-tree option. There is no source git repository at all.
+prepare: >
+  mkdir foosrc &&
+  cd foosrc &&
+  touch a &&
+  printf "#!/bin/sh\ntouch b\nrm a" >foobuild &&
+  cd .. &&
+  git init foodeploy.git --bare
+config:
+  src_repo: foosrc
+  deploy_repo: foodeploy.git
+  work_prefix: work
+  build_cmd: sh foobuild
+options:
+  - '--work-tree'
+deploy_tree:
+  master:
+    - b
+    - foobuild

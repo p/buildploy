@@ -70,8 +70,8 @@ def checkout(local_src, build_dir, branch):
     git_in_dir(local_src, ['checkout', 'src/%s' % branch])
     run(['rsync', '-aI', '--exclude', '.git', local_src + '/', build_dir, '--delete'])
 
-def copy(build_dir, branch, config):
-    run(['rsync', '-aI', '--exclude', '.git', config['src_repo'] + '/', build_dir, '--delete'])
+def copy(src_dir, build_dir):
+    run(['rsync', '-aI', '--exclude', '.git', src_dir + '/', build_dir, '--delete'])
 
 def run_in_dir(dir, cmd, **kwargs):
     # for the benefit of fork-less platforms
@@ -168,6 +168,8 @@ def load_config_file(path, format=None):
 
 def main():
     parser = optparse.OptionParser()
+    parser.add_option('-w', '--work-tree', action='store_true', dest='work_tree',
+        help='Build the work tree at source repo rather than committed changes')
     parser.add_option('-b', '--branch', action='store', dest='branch',
         help='Transform specified branch')
     parser.add_option('-p', '--push', action='store_true', dest='push',
@@ -198,14 +200,25 @@ def main():
         branches = [options.branch]
     else:
         branches = config.get('branches', ['master'])
-
-    local_src = os.path.join(config['work_prefix'], 'src')
-    if not os.path.exists(local_src):
-        run(['git', 'init', local_src])
-        git_in_dir(local_src, ['remote', 'add', 'src', config['src_repo'], '-f'])
-    else:
-        fetch_branches = ['src/' + branch for branch in branches]
-        git_in_dir(local_src, ['fetch', 'src'])
+    
+    if options.work_tree:
+        if len(branches) > 1:
+            raise ValueError('Using --work-tree requires specifying --branch if multiple branches are configured')
+        if config['src_repo'][0] != '/':
+            # XXX allow file:// urls also
+            raise ValueError('Using --work-tree requires a filesystem path for src_repo')
+    
+    if not os.path.exists(config['work_prefix']):
+        os.mkdir(config['work_prefix'])
+    
+    if not options.work_tree:
+        local_src = os.path.join(config['work_prefix'], 'src')
+        if not os.path.exists(local_src):
+            run(['git', 'init', local_src])
+            git_in_dir(local_src, ['remote', 'add', 'src', config['src_repo'], '-f'])
+        else:
+            fetch_branches = ['src/' + branch for branch in branches]
+            git_in_dir(local_src, ['fetch', 'src'])
 
     build_dir = os.path.join(config['work_prefix'], 'build')
     if not os.path.exists(build_dir):
@@ -218,8 +231,10 @@ def main():
     local_branches = git_list_local_branches(deploy_dir)
     remote_branches = git_list_remote_branches(deploy_dir)
     for branch in branches:
-        checkout(local_src, build_dir, branch)
-        #copy(build_dir, branch, config)
+        if options.work_tree:
+            copy(config['src_repo'], build_dir)
+        else:
+            checkout(local_src, build_dir, branch)
         build(build_dir, branch, config)
         
         # Initial branch checkout:
