@@ -1,5 +1,6 @@
 # buildploy - build projects into deployment repositories
 
+
 ## Background
 
 Since 2005 or so, when Capistrano was invented, the deployment workflow
@@ -35,6 +36,7 @@ may cause confusion.
 3. Source code repository is littered with files that most of the time
 nobody cares about.
 
+
 ## Deployment Repository
 
 The alternative is to maintain a separate repository for built code
@@ -44,6 +46,7 @@ is performed, and it is trivial to maintain history of deployed code.
 
 The only difficulty with this approach is that two repositories must
 be maintained.
+
 
 ## Buildploy
 
@@ -57,6 +60,7 @@ deployment repository. The deployment workflow becomes:
 3. Connect to server(s) via SSH.
 4. Check out deployable version of the source code from deployment repository.
 5. Symlink and restart.
+
 
 ## Bonus Features
 
@@ -73,6 +77,7 @@ prior to deployment.
 3. Precompilation that was considered cumbersome to perform on
 production machines during deployment becomes much less problematic
 to perform during the dedicated build phase.
+
 
 ## Usage
 
@@ -114,6 +119,7 @@ buildploy has no dependencies. Using YAML requires installing PyYAML.
 Configuration file format may be explicitly specified using
 ``--yaml-config`` and ``--json-config`` command line options.
 
+
 ## Branches
 
 By default buildploy transforms the master branch of the source repository.
@@ -127,6 +133,7 @@ If multiple branches are specified in the configuration file, they will
 be all transformed. To transform a single branch use ``-b`` command line
 argument.
 
+
 ## Deploying A Subdirectory Only
 
 It is possible to deploy a subdirectory of the entire repository:
@@ -135,9 +142,22 @@ It is possible to deploy a subdirectory of the entire repository:
 
 The specified subdirectory will become the root of the deployable tree.
 
+
+## Deploying A Work Tree / Arbitrary Directories
+
+Rather than deploying a Git repository, buildploy can deploy a work tree.
+This is typically the work tree part of a non-bare Git repository,
+however any directory can be used and it does not have to be version-controlled.
+
+To deploy a work tree, the source repository must be a local filesystem
+path (`/path/to/repo`) and `--work-tree` option must be given on the command
+line.
+
+
 ## Requirements
 
 Buildploy is written in Python and tested on Python 2.6, 2.7, 3.2 and 3.3.
+
 
 ## Tests
 
@@ -166,6 +186,7 @@ run the test suite as that user.
 	TESTS_TMP=/tmp/buildploy-tests make test
 
 <a href="https://travis-ci.org/p/buildploy"><img src="https://api.travis-ci.org/p/buildploy.png" alt="Travis build status" /></a>
+
 
 ## License
 
