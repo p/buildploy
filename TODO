@@ -1,1 +1,4 @@
 - reset deploy repo option is not correctly named
+- local deploy repo clone is not updated before build, resulting in
+failed fast forwards
+- make timestamps more readable
