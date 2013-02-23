@@ -1,0 +1,34 @@
+# Checks that if the deploy repo (remote) has commits beyond that in
+# the local deploy repo, that local repo is updated before build.
+prepare: >
+  git init foosrc &&
+  cd foosrc &&
+  touch a &&
+  printf "#!/bin/sh\ntouch b\nrm a" >foobuild &&
+  git add . &&
+  git commit -m 'Initial commit' &&
+  cd .. &&
+  git init foodeploy.git --bare &&
+  git clone foodeploy.git foodeploy &&
+  cd foodeploy &&
+  git commit -m 'Initial commit' --allow-empty &&
+  touch file-in-remote-only &&
+  git add . &&
+  git commit -m 'Commit in remote only' &&
+  git push origin master &&
+  git reset --hard HEAD^
+config:
+  src_repo: foosrc
+  deploy_repo: foodeploy.git
+  work_prefix: work
+  build_cmd: sh foobuild
+deploy_tree:
+  master:
+    - b
+    - foobuild
+check: >
+  set -e;
+  cd work/deploy;
+  git log |grep -q 'Commit in remote only';
+  cd ../../foodeploy.git;
+  git log |grep -q 'Commit in remote only';
