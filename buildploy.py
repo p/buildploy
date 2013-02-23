@@ -180,7 +180,7 @@ def main():
         help='Interpret configuration as YAML')
     parser.add_option('--json-config', action='store_true', dest='json_config',
         help='Interpret configuration as JSON')
-    parser.add_option('--reset-deploy-repo', action='store_true', dest='reset_deploy_repo',
+    parser.add_option('--discard-deploy-history', action='store_true', dest='discard_deploy_history',
         help='Discard history of branches being transformed in deployment repository')
     options, args = parser.parse_args()
     
@@ -281,7 +281,7 @@ def main():
                     git_reset_to_empty_tree(deploy_dir, branch)
                     already_reset = True
         
-        if options.reset_deploy_repo and not already_reset:
+        if options.discard_deploy_history and not already_reset:
             git_reset_to_empty_tree(deploy_dir, branch)
         
         if 'deploy_subdir' in config:
@@ -298,7 +298,7 @@ def main():
         push = options.push
     if push:
         cmd = ['push', 'deploy'] + branches
-        if options.reset_deploy_repo:
+        if options.discard_deploy_history:
             cmd += ['-f']
         git_in_dir(deploy_dir, cmd)
 

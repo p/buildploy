@@ -23,7 +23,7 @@ config:
   work_prefix: work
   build_cmd: sh foobuild
 options: 
-  - '--reset-deploy-repo'
+  - '--discard-deploy-history'
 check: >
   cd foodeploy.git &&
   ! git log |grep -q LiktowOurr
