@@ -20,7 +20,7 @@ class ConfigTest(unittest.TestCase):
     def setUp(self):
         super(ConfigTest, self).setUp()
         
-        self.fixtures_dir = os.environ.get('TESTS_TMP') or os.path.join(os.path.dirname(__file__), 'fixtures')
+        self.fixtures_dir = os.path.join(os.path.dirname(__file__), 'fixtures')
     
     def test_yaml(self):
         self.check('yaml_config.yaml')
