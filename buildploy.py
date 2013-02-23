@@ -291,7 +291,7 @@ def main():
         run(['rsync', '-aI', '--exclude', '.git', deploy_src + '/', deploy_dir, '--delete'])
         git_in_dir(deploy_dir, ['add', '-u'])
         git_in_dir(deploy_dir, ['add', '.'])
-        git_in_dir(deploy_dir, ['commit', '--allow-empty', '-m', 'Built at %s' % time.time()])
+        git_in_dir(deploy_dir, ['commit', '--allow-empty', '-m', 'Built at %s' % time.strftime('%a %b %d %H:%M:%S %Y %z')])
 
     push = config.get('push', True)
     if options.push is not None:
