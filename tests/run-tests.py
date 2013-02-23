@@ -113,6 +113,8 @@ def run_spec(test):
                     raise AssertionError(msg)
         
         if 'check' in spec:
+            # debugging
+            #run_in_dir(test_dir, ['sh', '-cx', spec['check']])
             run_in_dir(test_dir, spec['check'], shell=True)
         
         if 'check_output' in spec:
