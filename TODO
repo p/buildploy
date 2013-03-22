@@ -1,0 +1,2 @@
+- Changing deployment repository in buildploy.yml has no effect if
+  previous repository has been cloned already
