@@ -34,18 +34,20 @@ there needs to be tracking of whether generated files are up to date.
 2. Because of this, generated files are frequently out of date. This
 may cause confusion.
 3. Source code repository is littered with files that most of the time
-nobody cares about.
+nobody cares about, and these files may well take up more space than
+source code itself.
 
 
 ## Deployment Repository
 
-The alternative is to maintain a separate repository for built code
-that is ready to be deployed. This way all generated files go into the
-deployment repository, the files are generated only when a deployment
+The idea behind *buildploy* is to maintain a separate repository for built code
+that is ready to be deployed. This way generated files stay out of the
+source repository, the files are generated only when a deployment
 is performed, and it is trivial to maintain history of deployed code.
 
-The only difficulty with this approach is that two repositories must
-be maintained.
+The only overhead with this approach is that two repositories must
+be maintained instead of one, and there is a distinct build step
+in the workflow.
 
 
 ## Buildploy
