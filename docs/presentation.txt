@@ -1,0 +1,30 @@
+Two step build process/Buildploy - presentation
+
+- Build process - capistrano
+- update code on servers and restart
+
+Problems:
+- More complexity - coffeescript/sass, asset pipeline,
+building on servers
+- Storing built files in source repo, bundled ruby gems
+
+Solution:
+- two step build process
+- Separate repository for holding built source tree ready to be deployed
+
+Benefits (project dependent):
+- history of code actually deployed to servers
+- server load decreases
+- time to deploy decreases
+- destructive build operations
+- development builds
+- files that do not need to be deployed can be removed from built tree
+
+Buildploy - implementation in python
+- Single configuration file in the project
+- source repository
+- destination build repository
+- build command
+- build can be run by a separate user
+
+- Heroku - has a similar deployment process.
