@@ -228,6 +228,7 @@ def main():
     if not os.path.exists(deploy_dir):
         run(['git', 'init', deploy_dir])
         git_in_dir(deploy_dir, ['remote', 'add', 'deploy', config['deploy_repo'], '-f'])
+    git_in_dir(deploy_dir, ['fetch', 'deploy'])
     local_branches = git_list_local_branches(deploy_dir)
     remote_branches = git_list_remote_branches(deploy_dir)
     for branch in branches:
