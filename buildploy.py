@@ -188,10 +188,10 @@ def main():
     if options.yaml_config and options.json_config:
         raise ValueError('--yaml-config and --json-config cannot be both specified')
 
-    if len(sys.argv) < 2:
+    if len(args) != 1:
         parser.print_help()
         exit(10)
-    config_file = sys.argv[1]
+    config_file = args[0]
     if options.yaml_config:
         format = 'yaml'
     elif options.json_config:
