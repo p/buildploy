@@ -2,7 +2,7 @@ import os.path
 from distutils.core import setup
 
 package_name = 'buildploy'
-package_version = '0.1.0'
+package_version = '0.3.0'
 
 data_files = ['LICENSE', 'README.md']
 
