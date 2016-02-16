@@ -188,7 +188,7 @@ def main():
     if options.yaml_config and options.json_config:
         raise ValueError('--yaml-config and --json-config cannot be both specified')
 
-    if len(sys.argv) != 2:
+    if len(sys.argv) < 2:
         parser.print_help()
         exit(10)
     config_file = sys.argv[1]
