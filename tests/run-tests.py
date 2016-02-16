@@ -86,8 +86,7 @@ def run_spec(test):
             build_output_f.seek(0)
             output = build_output_f.read()
             print(output)
-            print(msg)
-            assert ok
+            assert ok, msg
         
         print('==> Checking %s' % test)
         if 'deploy_tree' in spec:
