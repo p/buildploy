@@ -4,6 +4,8 @@ from distutils.core import setup
 package_name = 'buildploy'
 package_version = '0.3.0'
 
+doc_dir = os.path.join('share', 'doc', package_name)
+
 data_files = ['LICENSE', 'README.md']
 
 setup(name=package_name,
@@ -15,7 +17,7 @@ setup(name=package_name,
     py_modules=['buildploy'],
     scripts=['bin/buildploy'],
     data_files=[
-        (data_files),
+        (doc_dir, data_files),
     ],
     license="BSD",
     classifiers=[
