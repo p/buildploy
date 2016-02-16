@@ -167,7 +167,8 @@ def load_config_file(path, format=None):
     return config
 
 def main():
-    parser = optparse.OptionParser()
+    usage = 'Usage: buildploy [options] path/to/config.{yaml|json}'
+    parser = optparse.OptionParser(usage=usage)
     parser.add_option('-w', '--work-tree', action='store_true', dest='work_tree',
         help='Build the work tree at source repo rather than committed changes')
     parser.add_option('-b', '--branch', action='store', dest='branch',
@@ -187,6 +188,9 @@ def main():
     if options.yaml_config and options.json_config:
         raise ValueError('--yaml-config and --json-config cannot be both specified')
 
+    if len(sys.argv) != 2:
+        parser.print_help()
+        exit(10)
     config_file = sys.argv[1]
     if options.yaml_config:
         format = 'yaml'
