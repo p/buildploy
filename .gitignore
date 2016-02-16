@@ -1,2 +1,6 @@
 /build
 /tests/tmp
+
+# distutils generated
+/MANIFEST
+/dist
