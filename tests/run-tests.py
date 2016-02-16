@@ -54,6 +54,9 @@ def run_spec(test):
     os.mkdir(test_dir)
     run_in_dir(test_dir, spec['prepare'], shell=True)
     
+    build_script = os.path.join(test_root, '../buildploy.py')
+    build_output_path = os.path.join(test_dir, 'build_output')
+    
     if 'config' in spec:
         config_file_name = spec.get('config_file_name', 'config')
         config_path = os.path.join(test_dir, config_file_name)
@@ -64,13 +67,16 @@ def run_spec(test):
                 value = os.path.join(test_dir, value)
                 case_config[key] = value
             yaml.dump(case_config, f)
+        args = [build_script, config_path]
+    else:
+        args = [build_script]
     
     print('==> Building %s' % test)
-    options = spec.get('options') or []
-    build_script = os.path.join(test_root, '../buildploy.py')
-    build_output_path = os.path.join(test_dir, 'build_output')
+    options = []
+    for option in spec.get('options') or []:
+        options.append(option.replace('{test_dir}', test_dir))
     with open(build_output_path, 'w+') as build_output_f:
-        code = run_in_dir(test_tmp, [build_script, config_path] + options,
+        code = run_in_dir(test_tmp, args + options,
             return_code=True,
             stdout=build_output_f, stderr=subprocess.STDOUT,
             )
@@ -90,7 +96,11 @@ def run_spec(test):
         
         print('==> Checking %s' % test)
         if 'deploy_tree' in spec:
-            run_in_dir(test_dir, ['git', 'clone', spec['config']['deploy_repo'], 'check'])
+            if 'dir_config' in spec:
+                deploy_repo = spec['dir_config']['deploy_repo']
+            else:
+                deploy_repo = spec['config']['deploy_repo']
+            run_in_dir(test_dir, ['git', 'clone', deploy_repo, 'check'])
             
             check_dir = os.path.join(test_dir, 'check')
             for branch in spec['deploy_tree']:

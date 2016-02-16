@@ -1,0 +1,32 @@
+# Same as basic test except all arguments are given on the command line.
+prepare: >
+  git init foosrc &&
+  cd foosrc &&
+  touch a &&
+  printf "#!/bin/sh\ntouch b\nrm a" >foobuild &&
+  git add . &&
+  git commit -m 'Initial commit' &&
+  cd .. &&
+  git init foodeploy.git --bare &&
+  git clone foodeploy.git foodeploy &&
+  cd foodeploy &&
+  git commit -m 'Initial commit' --allow-empty &&
+  git push origin master
+dir_config:
+  src_repo: foosrc
+  deploy_repo: foodeploy.git
+  work_prefix: work
+  build_cmd: sh foobuild
+options:
+  - '--src-repo'
+  - '{test_dir}/foosrc'
+  - '--deploy-repo'
+  - '{test_dir}/foodeploy.git'
+  - '--work-prefix'
+  - '{test_dir}/work'
+  - '--build-cmd'
+  - 'sh foobuild'
+deploy_tree:
+  master:
+    - b
+    - foobuild

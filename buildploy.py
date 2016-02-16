@@ -82,8 +82,8 @@ def run_in_dir(dir, cmd, **kwargs):
     finally:
         os.chdir(cwd)
 
-def build(build_dir, branch, config):
-    return run_in_dir(build_dir, config['build_cmd'], shell=True)
+def build(build_dir, branch, merged_config):
+    return run_in_dir(build_dir, merged_config.build_cmd, shell=True)
 
 def git_list_local_branches(dir):
     branches = []
@@ -143,8 +143,8 @@ def git_reset_to_empty_tree(deploy_dir, branch):
         git_in_dir(deploy_dir, ['checkout', '-b', branch])
     git_in_dir(deploy_dir, ['branch', '-d', 'newbranch'])
 
-def load_config_file(path, format=None):
-    if format is None:
+def load_config_file(path, format='auto'):
+    if format == 'auto':
         if path.endswith('.json'):
             format = 'json'
         else:
@@ -166,9 +166,56 @@ def load_config_file(path, format=None):
             raise new_exc
     return config
 
+class MergedConfig(object):
+    def __init__(self, config, options):
+        if options.branch:
+            self.branches = [options.branch]
+        elif config is not None:
+            self.branches = config.get('branches', ['master'])
+        else:
+            self.branches = ['master']
+    
+        for key in ['src_repo', 'work_prefix', 'deploy_repo', 'build_cmd']:
+            if getattr(options, key):
+                value = getattr(options, key)
+            elif config is not None:
+                value = config[key]
+            else:
+                option_name = '--' + key.replace('_', '-')
+                raise ValueError('%s option or %s config value must be set' % (option_name, key))
+            setattr(self, key, value)
+    
+        for key in ['deploy_subdir']:
+            if getattr(options, key):
+                value = getattr(options, key)
+            elif config is not None:
+                value = config.get(key, None)
+            else:
+                value = None
+            setattr(self, key, value)
+            
+        self.work_tree = options.work_tree
+        
+        if options.push is not None:
+            self.push = options.push
+        elif 'push' in config:
+            self.push = config['push']
+        else:
+            self.push = True
+
 def main():
     usage = 'Usage: buildploy [options] path/to/config.{yaml|json}'
     parser = optparse.OptionParser(usage=usage)
+    parser.add_option('--src-repo', dest='src_repo',
+        help='Remote location of source repository')
+    parser.add_option('--deploy-repo', dest='deploy_repo',
+        help='Remote location of deployment repository')
+    parser.add_option('--deploy-subdir', dest='deploy_subdir',
+        help='Deploy to the specified subdirectory of deployment repo')
+    parser.add_option('--work-prefix', dest='work_prefix',
+        help='Path to directory in which to build')
+    parser.add_option('--build-cmd', dest='build_cmd',
+        help='Command to run to build the sources')
     parser.add_option('-w', '--work-tree', action='store_true', dest='work_tree',
         help='Build the work tree at source repo rather than committed changes')
     parser.add_option('-b', '--branch', action='store', dest='branch',
@@ -188,59 +235,63 @@ def main():
     if options.yaml_config and options.json_config:
         raise ValueError('--yaml-config and --json-config cannot be both specified')
 
-    if len(args) != 1:
+    if len(args) > 1:
         parser.print_help()
         exit(10)
-    config_file = args[0]
-    if options.yaml_config:
-        format = 'yaml'
-    elif options.json_config:
-        format = 'json'
+    elif len(args) == 1:
+        config_file = args[0]
+        if options.yaml_config:
+            format = 'yaml'
+        elif options.json_config:
+            format = 'json'
+        else:
+            format = 'auto'
     else:
         format = None
-    config = load_config_file(config_file, format)
-    
-    if options.branch:
-        branches = [options.branch]
+    if format is not None:
+        config = load_config_file(config_file, format)
     else:
-        branches = config.get('branches', ['master'])
+        config = {}
     
-    if options.work_tree:
-        if len(branches) > 1:
+    merged_config = MergedConfig(config, options)
+    del config
+    
+    if merged_config.work_tree:
+        if len(merged_config.branches) > 1:
             raise ValueError('Using --work-tree requires specifying --branch if multiple branches are configured')
-        if config['src_repo'][0] != '/':
+        if merged_config.src_repo[0] != '/':
             # XXX allow file:// urls also
-            raise ValueError('Using --work-tree requires a filesystem path for src_repo')
+            raise ValueError('Using --work-tree requires a filesystem path for src repo')
     
-    if not os.path.exists(config['work_prefix']):
-        os.mkdir(config['work_prefix'])
+    if not os.path.exists(merged_config.work_prefix):
+        os.mkdir(merged_config.work_prefix)
     
     if not options.work_tree:
-        local_src = os.path.join(config['work_prefix'], 'src')
+        local_src = os.path.join(merged_config.work_prefix, 'src')
         if not os.path.exists(local_src):
             run(['git', 'init', local_src])
-            git_in_dir(local_src, ['remote', 'add', 'src', config['src_repo'], '-f'])
+            git_in_dir(local_src, ['remote', 'add', 'src', merged_config.src_repo, '-f'])
         else:
-            fetch_branches = ['src/' + branch for branch in branches]
+            fetch_branches = ['src/' + branch for branch in merged_config.branches]
             git_in_dir(local_src, ['fetch', 'src'])
 
-    build_dir = os.path.join(config['work_prefix'], 'build')
+    build_dir = os.path.join(merged_config.work_prefix, 'build')
     if not os.path.exists(build_dir):
         os.mkdir(build_dir)
 
-    deploy_dir = os.path.join(config['work_prefix'], 'deploy')
+    deploy_dir = os.path.join(merged_config.work_prefix, 'deploy')
     if not os.path.exists(deploy_dir):
         run(['git', 'init', deploy_dir])
-        git_in_dir(deploy_dir, ['remote', 'add', 'deploy', config['deploy_repo'], '-f'])
+        git_in_dir(deploy_dir, ['remote', 'add', 'deploy', merged_config.deploy_repo, '-f'])
     git_in_dir(deploy_dir, ['fetch', 'deploy'])
     local_branches = git_list_local_branches(deploy_dir)
     remote_branches = git_list_remote_branches(deploy_dir)
-    for branch in branches:
+    for branch in merged_config.branches:
         if options.work_tree:
-            copy(config['src_repo'], build_dir)
+            copy(merged_config.src_repo, build_dir)
         else:
             checkout(local_src, build_dir, branch)
-        build(build_dir, branch, config)
+        build(build_dir, branch, merged_config)
         
         # Initial branch checkout:
         # 1. Branch exists in local deploy repo - check it out
@@ -289,8 +340,8 @@ def main():
         if options.discard_deploy_history and not already_reset:
             git_reset_to_empty_tree(deploy_dir, branch)
         
-        if 'deploy_subdir' in config:
-            deploy_src = os.path.join(build_dir, config['deploy_subdir'])
+        if merged_config.deploy_subdir is not None:
+            deploy_src = os.path.join(build_dir, merged_config.deploy_subdir)
         else:
             deploy_src = build_dir
         run(['rsync', '-aI', '--exclude', '.git', deploy_src + '/', deploy_dir, '--delete'])
@@ -298,11 +349,9 @@ def main():
         git_in_dir(deploy_dir, ['add', '.'])
         git_in_dir(deploy_dir, ['commit', '--allow-empty', '-m', 'Built at %s' % time.strftime('%a %b %d %H:%M:%S %Y %z')])
 
-    push = config.get('push', True)
-    if options.push is not None:
-        push = options.push
+    push = merged_config.push
     if push:
-        cmd = ['push', 'deploy'] + branches
+        cmd = ['push', 'deploy'] + merged_config.branches
         if options.discard_deploy_history:
             cmd += ['-f']
         git_in_dir(deploy_dir, cmd)
