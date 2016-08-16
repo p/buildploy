@@ -232,6 +232,8 @@ def main():
         help='Interpret configuration as JSON')
     parser.add_option('--discard-deploy-history', action='store_true', dest='discard_deploy_history',
         help='Discard history of branches being transformed in deployment repository')
+    parser.add_option('-c', '--post-cmd', dest='post_cmd',
+        help='Command to run in deployment directory after build completes')
     options, args = parser.parse_args()
     
     if options.yaml_config and options.json_config:
@@ -350,6 +352,8 @@ def main():
         git_in_dir(deploy_dir, ['add', '-u'])
         git_in_dir(deploy_dir, ['add', '.'])
         git_in_dir(deploy_dir, ['commit', '--allow-empty', '-m', 'Built at %s' % time.strftime('%a %b %d %H:%M:%S %Y %z')])
+    if options.post_cmd:
+        run_in_dir(deploy_dir, options.post_cmd)
 
     push = merged_config.push
     if push:
