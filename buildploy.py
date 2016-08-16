@@ -68,6 +68,8 @@ def git_in_dir(dir, args, **kwargs):
 
 def checkout(local_src, build_dir, branch):
     git_in_dir(local_src, ['checkout', 'src/%s' % branch])
+    run_in_dir(local_src, ['git', 'submodule', 'init'])
+    run_in_dir(local_src, ['git', 'submodule', 'update'])
     run(['rsync', '-aI', '--exclude', '.git', local_src + '/', build_dir, '--delete'])
 
 def copy(src_dir, build_dir):
