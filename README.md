@@ -1,5 +1,11 @@
 # buildploy - build projects into deployment repositories
 
+buildploy is a deployment preparation tool for projects that have
+long-running steps in the deployment process or projects that deploy
+large generated artifacts. It eliminates duplication of work
+when deploying to multiple servers, permits arbitrary transformations
+of source code including destructive ones, and maintains a history
+of code and artifacts actually deployed.
 
 ## Background
 
