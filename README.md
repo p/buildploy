@@ -167,6 +167,7 @@ line.
 ## Requirements
 
 Buildploy is written in Python and tested on Python 2.6, 2.7, 3.2 and 3.3.
+It has no dependencies outside of Python itself.
 
 
 ## Tests
