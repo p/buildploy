@@ -9,8 +9,9 @@ of code and artifacts actually deployed.
 
 ## Background
 
-Since 2005 or so, when Capistrano was invented, the deployment workflow
-that worked for almost everyone has been as follows:
+Since 2005 or so, when [Capistrano](http://capistranorb.com/)
+was invented, the deployment workflow
+that was used in most Ruby projects has been as follows:
 
 1. Put source code into version control.
 2. Connect to server(s) via SSH.
@@ -22,14 +23,15 @@ This works fine for projects that don't do much building in step 4.
 However this workflow has some disadvantages:
 
 1. All tools needed for building must be installed on all servers.
-The most famous blunder related to this was perhaps when Rails required
-a JavaScript interpreter on all servers to compile CoffeeScript assets.
-2. Build step is performed by all servers, when most of the time
-the operation is exactly identical from one server to the next.
+The most famous "oops" related to this was when Rails started requiring
+a JavaScript interpreter on all servers to compile CoffeeScript assets,
+with this interpreter not being used at all by anything else in production.
+2. Build operations are performed by all servers, when most of the time
+the operations are exactly identical from one server to the next.
 3. If the build step is CPU-intensive, application performance suffers
 while a new version is being deployed.
 4. There is no record of the code that was actually being used by
-the application after old releases are cleaned up.
+the application after old releases are cleaned up on the servers.
 
 The solution that is often adopted is to place generated files into
 (the one and only) source repository. This fixes most of the above
@@ -73,7 +75,7 @@ deployment repository. The deployment workflow becomes:
 ## Bonus Features
 
 Since buildploy permits arbitrary transformations, this can be exploited
-to further optimize deployment prorcess:
+to further optimize deployment process:
 
 1. If original source files are translated into either other source files
 or binary files, and original files are not used by the running application,
